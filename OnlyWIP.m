@@ -5,13 +5,14 @@ clear all%
 
 syms x y phi %se(2) position
 syms theta psi_r psi_l 
-syms alpha_r alpha_l % position of arm is respect to body as robotics 1 manipulators
 
-syms dx dy dphi dtheta dpsi_r dpsi_l dalpha_r dalpha_l
+syms dx dy dphi dtheta dpsi_r dpsi_l 
 
-vars= [x y phi theta psi_r psi_l alpha_r alpha_l];
-dvars= [dx dy dphi dtheta dpsi_r dpsi_l dalpha_r dalpha_l];
+vars= [x y phi theta psi_r psi_l ];
+dvars= [dx dy dphi dtheta dpsi_r dpsi_l ];
 
+
+syms u
 %parameters 
 %took similar to WIP paper with small wip (19.5cm * 10.3cm)
 syms l%=5e-2; %[m] distance from wheel axis to body center of mass 
@@ -41,18 +42,6 @@ Bp=[x+l*sin(theta)*cos(phi);...
 V_b=diff_fun(Bp,vars,dvars)%jacobian(Bp,vars)*dvars
 omega_b=[-dphi*sin(theta);dtheta;dphi*cos(theta)];
 
-%arms position
-Ap_l=[x-d_a/2*sin(phi)+(l*sin(theta)+(l_a/2)*sin(theta+alpha_l))*cos(phi);...
-    y+d_a/2*cos(phi)+(l*sin(theta)+(l_a/2)*sin(theta+alpha_l))*sin(phi);...
-    (w_dm/2)+l*cos(theta)+(l_a/2)*cos(theta+alpha_l)];
-V_al=(diff_fun(Ap_l,vars,dvars))
-omega_al=[dalpha_l,0,dphi].';           
-
-Ap_r=[x+d_a/2*sin(phi)+(l*sin(theta)+(l_a/2)*sin(theta+alpha_r))*cos(phi);...
-    y-d_a/2*cos(phi)+(l*sin(theta)+(l_a/2)*sin(theta+alpha_r))*sin(phi);...
-    (w_dm/2)+l*cos(theta)+(l_a/2)*cos(theta+alpha_r)];
-V_ar=(diff_fun(Ap_r,vars,dvars))
-omega_ar=[dalpha_r,0,dphi].';
 
 %wheel position
 Wp_r=[x-d_w/2*sin(phi);y+d_w/2*cos(phi);w_dm/2];
@@ -68,9 +57,6 @@ omega_wr=[dpsi_r,0,dphi].';
 Tb=(1/2)*(m_b*(V_b.')*V_b+omega_b.'*I_b*omega_b);
 
 
-%Arms K
-Ta=(1/2)*(m_a*(V_al.')*V_al+(omega_al.')*I_a*omega_al)...
-    +(1/2)*(m_a*(V_ar.')*V_ar+(omega_ar.')*I_a*omega_ar);
 
 %Wheels L
 Tw=(1/2)*(m_w*(V_wl.')*V_wl+omega_wl.'*I_a*omega_wl)...
@@ -79,17 +65,16 @@ Tw=(1/2)*(m_w*(V_wl.')*V_wl+omega_wl.'*I_a*omega_wl)...
 
 %Body P
 Vb=m_b*g*Bp(3);
-%Arm P
-Va=m_a*g*Ap_l(3)+m_a*g*Ap_r(3); 
+
 
 
 %Lagrangian
-T=Tb+Ta+Tw;
-V=Va+Vb;
+T=Tb+Tw;
+V=Vb;
 
 L=T-V;
 
-Q=[0,0,0,0,0,0,0,0];
+Q=[0,0,0,0,0,u];
 EulerLagrange(vars,dvars,L,Q,1)
 
 
