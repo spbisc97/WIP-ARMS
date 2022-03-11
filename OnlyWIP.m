@@ -8,8 +8,8 @@ syms theta psi_r psi_l
 
 syms dx dy dphi dtheta dpsi_r dpsi_l 
 
-vars= [x y phi theta psi_r psi_l ];
-dvars= [dx dy dphi dtheta dpsi_r dpsi_l ];
+vars= [x y phi theta psi_r psi_l ].';
+dvars= [dx dy dphi dtheta dpsi_r dpsi_l ].';
 
 
 syms u
@@ -22,7 +22,7 @@ syms m_a%=3e-2;%[kg]
 syms m_w%=3e-2;%[kg]
 syms w_dm%=2*3e-2; %wheel diameter
 
-syms d_w%=10e-3;  %[m]distance btw wheels
+syms w_dist%=10e-3;  %[m]distance btw wheels
 syms d_a%=10e-3;  %[m]distance btw arms
 
 syms g
@@ -44,8 +44,8 @@ omega_b=[-dphi*sin(theta);dtheta;dphi*cos(theta)];
 
 
 %wheel position
-Wp_r=[x-d_w/2*sin(phi);y+d_w/2*cos(phi);w_dm/2];
-Wp_l=[x+d_w/2*sin(phi);y-d_w/2*cos(phi);w_dm/2];
+Wp_r=[x-w_dist/2*sin(phi);y+w_dist/2*cos(phi);w_dm/2];
+Wp_l=[x+w_dist/2*sin(phi);y-w_dist/2*cos(phi);w_dm/2];
 V_wl=diff_fun(Wp_l,vars,dvars);
 V_wr=diff_fun(Wp_r,vars,dvars);
 omega_wl=[dpsi_l,0,dphi].';
@@ -59,8 +59,8 @@ Tb=(1/2)*(m_b*(V_b.')*V_b+omega_b.'*I_b*omega_b);
 
 
 %Wheels L
-Tw=(1/2)*(m_w*(V_wl.')*V_wl+omega_wl.'*I_a*omega_wl)...
-    +(1/2)*(m_w*(V_wr.')*V_wr+omega_wr.'*I_a*omega_wr);
+Tw=(1/2)*(m_w*(V_wl.')*V_wl+omega_wl.'*I_w*omega_wl)...
+    +(1/2)*(m_w*(V_wr.')*V_wr+omega_wr.'*I_w*omega_wr);
 
 
 %Body P
@@ -74,13 +74,13 @@ V=Vb;
 
 L=T-V;
 
-Q=[0,0,0,0,0,u];
+Q=[0,0,0,0,u,0];
 EulerLagrange(vars,dvars,L,Q,1)
 
 
 function diffun=diff_fun(fun,vars,dvars)
-
-
+vars=vars(:).';
+dvars=dvars(:).';
 diffun=zeros(length(fun),1);
 
 for i=1:length(vars)

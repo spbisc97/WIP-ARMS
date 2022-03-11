@@ -20,7 +20,7 @@ syms m_a%=3e-2;%[kg]
 syms m_w%=3e-2;%[kg]
 syms w_d%=2*3e-2; %wheel diameter
 
-syms d_w%=10e-3;  %[m]distance btw wheels
+syms w_dist%=10e-3;  %[m]distance btw wheels
 syms d_a%=10e-3;  %[m]distance btw arms
 syms g
 
