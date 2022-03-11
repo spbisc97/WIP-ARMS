@@ -4,21 +4,25 @@
 clear all%
 
 syms x y phi %se(2) position
-syms theta psi_r psi_l 
+syms  psi_r psi_l 
 
-syms dx dy dphi dtheta dpsi_r dpsi_l 
+syms dx dy dphi dpsi_r dpsi_l 
 
-vars= [x y phi theta psi_r psi_l ];
-dvars= [dx dy dphi dtheta dpsi_r dpsi_l ];
+vars= [x y phi psi_r psi_l ].';
+dvars= [dx dy dphi dpsi_r dpsi_l ].';
 
+syms ul ur
 %parameters 
 %took similar to WIP paper with small wip (19.5cm * 10.3cm)
 syms l%=5e-2; %[m] distance from wheel axis to body center of mass 
+syms l_a%=2e-2; %[m]lenght of arms
 syms m_b%=3e-1; %[kg]
+syms m_a%=3e-2;%[kg]
 syms m_w%=3e-2;%[kg]
 syms w_dm%=2*3e-2; %wheel diameter
 
 syms w_dist%=10e-3;  %[m]distance btw wheels
+syms d_a%=10e-3;  %[m]distance btw arms
 
 syms g
 
@@ -30,56 +34,52 @@ syms I_a%=diag(I_axx, I_ayy, I_azz);
 % I_wxx I_wyy I_wzz 
 syms I_w%=diag(I_wxx, I_wyy, I_wzz);
 
-%body position
-Bp=[x+l*sin(theta)*cos(phi);...
-    y+l*sin(theta)*sin(phi);...
-    (w_dm/2)+l*cos(theta)];
-V_b=diff_fun(Bp,vars,dvars)%jacobian(Bp,vars)*dvars
-omega_b=[-dphi*sin(theta);dtheta;dphi*cos(theta)];
-%dphi has a minus bc when theta is 90 the robot lies on the xref-yref plan
-%and the xbody has opposite direction to zref 
+
+%constraints
+dx=w_dm*(dpsi_r+dpsi_l)/2*cos(phi);
+dy=w_dm*(dpsi_r+dpsi_l)/2*sin(phi);
+dphi=w_dm*(dpsi_r+dpsi_l)/w_dist;
 
 
 %wheel position
-Wp_r=[x+w_dist/2*sin(phi);y-w_dist/2*cos(phi);w_dm/2];
-Wp_l=[x-w_dist/2*sin(phi);y+w_dist/2*cos(phi);w_dm/2];
+Wp_r=[x-w_dist/2*sin(phi);y+w_dist/2*cos(phi);w_dm/2];
+Wp_l=[x+w_dist/2*sin(phi);y-w_dist/2*cos(phi);w_dm/2];
 V_wl=diff_fun(Wp_l,vars,dvars);
 V_wr=diff_fun(Wp_r,vars,dvars);
-omega_wl=[0,dpsi_l,dphi].';% on Ixx the rotation is always zero bc of the wheel always stands up
-omega_wr=[0,dpsi_r,dphi].';
+omega_wl=[dpsi_l,0,dphi].';
+omega_wr=[dpsi_r,0,dphi].';
 
 
 %% Lagrangian
-%Body K
-Tb=(1/2)*(m_b*(V_b.')*V_b+omega_b.'*I_b*omega_b);
 
 
-
-
-%Wheels k
+%Wheels K
 Tw=(1/2)*(m_w*(V_wl.')*V_wl+omega_wl.'*I_w*omega_wl)...
     +(1/2)*(m_w*(V_wr.')*V_wr+omega_wr.'*I_w*omega_wr);
 
 
-%Body P
-Vb=m_b*g*Bp(3);
 
 
 
 %Lagrangian
-T=Tb+Tw;
-V=Vb;
+T=Tw;
+V=0;
 
 L=T-V;
 
-Q=[0,0,0,0,0,0];
-LG=EulerLagrange(vars,dvars,L,Q,0)
 
-L=simplify(L);
-disp(L)
+
+
+%Q for the external forces
+Q=[sym(0),sym(0),sym(0),ul,ur];
+EulerLagrange(vars,dvars,L,Q,2)
+
 
 function diffun=diff_fun(fun,vars,dvars)
+vars=vars(:).';
+dvars=dvars(:).';
 diffun=zeros(length(fun),1);
+
 for i=1:length(vars)
     diffun=diffun+diff(fun,vars(i))*dvars(i);
 end

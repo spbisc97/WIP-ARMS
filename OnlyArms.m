@@ -42,13 +42,13 @@ omega_b=[0;0;dphi];
 
 Ap_l=[0-d_a/2*sin(phi)+((l_a/2)*sin(alpha_l))*cos(phi);...
     0+d_a/2*cos(phi)+((l_a/2)*sin(alpha_l))*sin(phi);...
-    l+(l_a/2)*cos(alpha_l)];
+    l*2+(l_a/2)*cos(alpha_l)];
 V_al=(diff_fun(Ap_l,vars,dvars))
 omega_al=[dalpha_l,0,dphi].';           
 
 Ap_r=[0+d_a/2*sin(phi)+((l_a/2)*sin(alpha_r))*cos(phi);...
     0-d_a/2*cos(phi)+((l_a/2)*sin(alpha_r))*sin(phi);...
-    l+(l_a/2)*cos(alpha_r)];
+    l*2+(l_a/2)*cos(alpha_r)];
 V_ar=(diff_fun(Ap_r,vars,dvars))
 omega_ar=[dalpha_r,0,dphi].';
 

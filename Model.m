@@ -36,31 +36,33 @@ syms I_w%=diag(I_wxx, I_wyy, I_wzz);
 
 %body position
 Bp=[x+l*sin(theta)*cos(phi);...
-    y+l*sin(theta)*cos(phi);...
-    (w_dm/2)+l*sin(theta)];
+    y+l*sin(theta)*sin(phi);...
+    (w_dm/2)+l*cos(theta)];
 V_b=diff_fun(Bp,vars,dvars)%jacobian(Bp,vars)*dvars
 omega_b=[-dphi*sin(theta);dtheta;dphi*cos(theta)];
+%dphi has a minus bc when theta is 90 the robot lies on the xref-yref plan
+%and the xbody has opposite direction to zref 
 
 %arms position
-Ap_l=[x-d_a/2*sin(phi)+(l*sin(theta)+(l_a/2)*sin(theta+alpha_l))*cos(phi);...
-    y+d_a/2*cos(phi)+(l*sin(theta)+(l_a/2)*sin(theta+alpha_l))*sin(phi);...
-    (w_dm/2)+l*cos(theta)+(l_a/2)*cos(theta+alpha_l)];
+Ap_l=[x-d_a/2*sin(phi)+(l*2*sin(theta)+(l_a/2)*sin(theta+alpha_l))*cos(phi);...
+    y+d_a/2*cos(phi)+(l*2*sin(theta)+(l_a/2)*sin(theta+alpha_l))*sin(phi);...
+    (w_dm/2)+l*2*cos(theta)+(l_a/2)*cos(theta+alpha_l)];
 V_al=(diff_fun(Ap_l,vars,dvars))
-omega_al=[dalpha_l,0,dphi].';           
+omega_al=[-dphi*sin(theta+alpha_l),dalpha_l+dtheta,dphi*cos(theta+alpha_l)].';           
 
-Ap_r=[x+d_a/2*sin(phi)+(l*sin(theta)+(l_a/2)*sin(theta+alpha_r))*cos(phi);...
-    y-d_a/2*cos(phi)+(l*sin(theta)+(l_a/2)*sin(theta+alpha_r))*sin(phi);...
-    (w_dm/2)+l*cos(theta)+(l_a/2)*cos(theta+alpha_r)];
+Ap_r=[x+d_a/2*sin(phi)+(l*2*sin(theta)+(l_a/2)*sin(theta+alpha_r))*cos(phi);...
+    y-d_a/2*cos(phi)+(l*2*sin(theta)+(l_a/2)*sin(theta+alpha_r))*sin(phi);...
+    (w_dm/2)+l*2*cos(theta)+(l_a/2)*cos(theta+alpha_r)];
 V_ar=(diff_fun(Ap_r,vars,dvars))
-omega_ar=[dalpha_r,0,dphi].';
+omega_ar=[-dphi*sin(theta+alpha_r),dalpha_r+dtheta,dphi*cos(theta+alpha_r)].';
 
 %wheel position
-Wp_r=[x-w_dist/2*sin(phi);y+w_dist/2*cos(phi);w_dm/2];
-Wp_l=[x+w_dist/2*sin(phi);y-w_dist/2*cos(phi);w_dm/2];
+Wp_r=[x+w_dist/2*sin(phi);y-w_dist/2*cos(phi);w_dm/2];
+Wp_l=[x-w_dist/2*sin(phi);y+w_dist/2*cos(phi);w_dm/2];
 V_wl=diff_fun(Wp_l,vars,dvars);
 V_wr=diff_fun(Wp_r,vars,dvars);
-omega_wl=[dpsi_l,0,dphi].';
-omega_wr=[dpsi_r,0,dphi].';
+omega_wl=[0,dpsi_l,dphi].';% on Ixx the rotation is always zero bc of the wheel always stands up
+omega_wr=[0,dpsi_r,dphi].';
 
 
 %% Lagrangian
@@ -72,7 +74,7 @@ Tb=(1/2)*(m_b*(V_b.')*V_b+omega_b.'*I_b*omega_b);
 Ta=(1/2)*(m_a*(V_al.')*V_al+(omega_al.')*I_a*omega_al)...
     +(1/2)*(m_a*(V_ar.')*V_ar+(omega_ar.')*I_a*omega_ar);
 
-%Wheels L
+%Wheels k
 Tw=(1/2)*(m_w*(V_wl.')*V_wl+omega_wl.'*I_w*omega_wl)...
     +(1/2)*(m_w*(V_wr.')*V_wr+omega_wr.'*I_w*omega_wr);
 
@@ -90,14 +92,13 @@ V=Va+Vb;
 L=T-V;
 
 Q=[0,0,0,0,0,0,0,0];
-EulerLagrange(vars,dvars,L,Q,1)
+LG=EulerLagrange(vars,dvars,L,Q,2);
 
+L=simplify(L);
+disp(L);
 
 function diffun=diff_fun(fun,vars,dvars)
-
-
 diffun=zeros(length(fun),1);
-
 for i=1:length(vars)
     diffun=diffun+diff(fun,vars(i))*dvars(i);
 end
