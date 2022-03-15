@@ -28,10 +28,11 @@ syms d_a%=10e-3;  %[m]distance btw arms
 syms g
 
 %inertia
-% I_bxx I_byy I_bzz 
-syms I_b%=diag(I_bxx ,I_byy ,I_bzz);
-% I_axx I_ayy I_azz 
-syms I_a%=diag(I_axx, I_ayy, I_azz);
+%I_bxx=550e-6 ;I_byy=480e-6; I_bzz=150e-6 ;
+syms I_bxx I_byy I_bzz I_axx I_ayy I_azz
+ I_b=diag([I_bxx ,I_byy ,I_bzz]);
+%I_axx=m_a*l_a^2/12; I_ayy=m_a*l_a^2/3; I_azz=5e-5 ;   %mr^2/2
+ I_a=diag([I_axx, I_ayy, I_azz]);
 % I_wxx I_wyy I_wzz 
 syms I_w%=diag(I_wxx, I_wyy, I_wzz);
 
@@ -83,10 +84,20 @@ V=Va+Vb;
 L=T-V;
 
 Q=[0,0,ur,ul];
-LG=EulerLagrange(vars,dvars,L,Q,2);
+% LG=EulerLagrange(vars,dvars,L,Q,2);
+% 
+% LG=simplify(LG);
+% disp(LG);
+%parameters 
 
-LG=simplify(LG);
-disp(LG);
+
+addpath(genpath('../../Matlab_Euler-Lagrange_Library_for_Deriving_Equations_of_Dynamic_Systems'))
+Eq=LagrangeDynamicEqDeriver(L,vars,dvars)
+tt = linspace(0,5,50);
+
+[SS, xx] = DynamicEqSolver(Eq, vars, dvars, [l l_a m_b m_a d_a I_bxx I_byy I_bzz  I_axx I_ayy I_azz  g],...
+                           [5e-2 2e-3 3e-1 3e-2 10e-3 550e-6 480e-6 150e-6 5e-7 5e-7 5e-5 9.81], tt, [0,0,0,0,0.4,0,0.5,0.5]);
+
 
 function diffun=diff_fun(fun,vars,dvars)
 diffun=zeros(length(fun),1);
