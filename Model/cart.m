@@ -7,12 +7,11 @@ syms x y phi %se(2) position
 syms theta psi_r psi_l 
 
 syms dx dy dphi dtheta dpsi_r dpsi_l 
-syms ddx ddy ddphi ddtheta ddpsi_r ddpsi_l 
 
 
 
-vars= [theta psi_r psi_l ];
-dvars= [dtheta dpsi_r dpsi_l ];
+vars= [x theta];
+dvars= [dx dtheta];
 
 %parameters 
 %took similar to WIP paper with small wip (19.5cm * 10.3cm)
@@ -37,10 +36,9 @@ syms I_w%=diag(I_wxx, I_wyy, I_wzz);
 
 %body position
 Bp=[x+l*sin(theta)*cos(phi);...
-    y+l*sin(theta)*sin(phi);...
     (w_dm/2)+l*cos(theta)];
 V_b=diff_fun(Bp,vars,dvars);%jacobian(Bp,vars)*dvars
-omega_b=[-dphi*sin(theta);dtheta;dphi*cos(theta)];
+omega_b=dtheta;
 %dphi has a minus bc when theta is 90 the robot lies on the xref-yref plan
 %and the xbody has opposite direction to zref 
 
@@ -79,37 +77,19 @@ L=T-V;
 disp(L)
 sub_phi=w_r/w_dist*(psi_r-psi_l);
 sub_dphi=w_r/w_dist*(dpsi_r-dpsi_l);
-sub_x=simplify((psi_l+psi_r+2*theta)/2*w_r*cos(sub_phi));
-sub_y=simplify((psi_l+psi_r+2*theta)/2*w_r*sin(sub_phi));
+sub_x=(psi_l+psi_r)/2*w_r*cos(sub_phi);
+sub_y=(psi_l+psi_r)/2*w_r*sin(sub_phi);
 
-sub_dx=simplify(jacobian(sub_x,[psi_l,psi_r,theta])*[dpsi_l,dpsi_r,dtheta].');
-sub_dy=simplify(jacobian(sub_y,[psi_l,psi_r,theta])*[dpsi_l,dpsi_r,dtheta].');
-subs(L,[dx dy dphi phi],[sub_dx sub_dy sub_dphi sub_phi])
+sub_dx=jacobian(sub_x,[psi_l,psi_r])*[dpsi_l,dpsi_r].';
+sub_dy=jacobian(sub_y,[psi_l,psi_r])*[dpsi_l,dpsi_r].';
+subs(L,[dx dy dphi phi],[0 0 sub_dphi sub_phi])
 
 
-Q=[u_r+u_l,u_r,u_l];
-LG=EulerLagrange(vars,dvars,L,Q,2);
+Q=[0,u_r,u_l];
+LG=EulerLagrange(vars,dvars,L,Q,0);
 
 LG=simplify(LG);
 disp(LG)
-
-
-disp("Other")
-sub_ddx=simplify(jacobian(sub_dx,[psi_l,psi_r,theta,dpsi_l,dpsi_r,dtheta])*[dpsi_l,dpsi_r,dtheta,ddpsi_l,ddpsi_r,ddtheta].');
-sub_ddy=simplify(jacobian(sub_dy,[psi_l,psi_r,theta,dpsi_l,dpsi_r,dtheta])*[dpsi_l,dpsi_r,dtheta,ddpsi_l,ddpsi_r,ddtheta].');
-sub_ddphi=simplify(jacobian(sub_dphi,[psi_l,psi_r,theta,dpsi_l,dpsi_r,dtheta])*[dpsi_l,dpsi_r,dtheta,ddpsi_l,ddpsi_r,ddtheta].');
-disp(sub_ddx)
-disp(sub_ddx)
-disp(sub_ddphi)
-
-%put into struct
-WIP.DDtheta=LG(1);
-WIP.DDphi_r=LG(2);
-WIP.DDphi_l=LG(3);
-WIP.DDx=sub_ddx;
-WIP.DDy=sub_ddy;
-WIP.DDphi=sub_ddphi;
-
 
 function diffun=diff_fun(fun,vars,dvars)
 diffun=zeros(length(fun),1);

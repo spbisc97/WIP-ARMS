@@ -90,6 +90,8 @@ T=Tb+Ta+Tw;
 V=Va+Vb;
 
 L=T-V;
+disp(L);
+pause
 
 Q=[0,0,0,0,0,0,0,0];
 LG=EulerLagrange(vars,dvars,L,Q,2);
