@@ -8,7 +8,7 @@ syms DDx DDtheta  F mp mc l g
 syms Tr r mw g mp l Te  tau
 syms DDpsi DDtheta theta Dtheta psi
 
-g=10;  l=2;  mc=5;
+g=9.81;  l=2;  mc=5;
 mp=2; mw=1; r=1;
 tau=F;
 Iw=mw*r*r;
