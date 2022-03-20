@@ -28,12 +28,12 @@ syms w_dist%=10e-3;  %[m]distance btw wheels
 syms g u_r u_l
 
 %inertia
-% I_bxx I_byy I_bzz 
-syms I_b%=diag(I_bxx ,I_byy ,I_bzz);
-% I_axx I_ayy I_azz 
-syms I_a%=diag(I_axx, I_ayy, I_azz);
-% I_wxx I_wyy I_wzz 
-syms I_w%=diag(I_wxx, I_wyy, I_wzz);
+syms  I_bxx I_byy I_bzz 
+I_b=diag([I_bxx ,I_byy ,I_bzz]);
+syms I_axx I_ayy I_azz 
+I_a=diag([I_axx, I_ayy, I_azz]);
+syms I_wxx I_wyy I_wzz 
+ I_w=diag([I_wxx, I_wyy, I_wzz]);
 
 %body position
 Bp=[x+l*sin(theta)*cos(phi);...
@@ -109,6 +109,8 @@ WIP.DDphi_l=LG(3);
 WIP.DDx=sub_ddx;
 WIP.DDy=sub_ddy;
 WIP.DDphi=sub_ddphi;
+
+writestruct(WIP,"WIP.xml")
 
 
 function diffun=diff_fun(fun,vars,dvars)
