@@ -5,10 +5,8 @@ clear all, close all, clc
 syms x theta Dtheta Dx
 syms DDx DDtheta  F mp mc l g 
 
-
-syms DDpsi DDtheta theta Dtheta psi
 syms Tr r mw g mp l Te  tau
-
+syms DDpsi DDtheta theta Dtheta psi
 
 g=10;  l=2;  mc=5;
 mp=2; mw=1; r=1;
@@ -18,6 +16,10 @@ Ip=mp*l*l/12;
 stab=0;
 eq(1)= (mp+mw+Iw/r^2)*DDpsi*r+mp*l*cos(theta)*DDtheta-mp*l*sin(theta)*Dtheta^2==tau/r; 
 eq(2)= (mp*l*cos(theta))*DDpsi*r+(Ip+mp*l)*DDtheta-mp*l*g*sin(theta)==-tau;
+
+
+
+
 
 
 
@@ -44,22 +46,22 @@ A=double(A);
 B=double(B);
 
 Q = [10 0 0 0;
-    0 10 0 0;
+    0 1 0 0;
     0 0 10 0;
     0 0 0 100];
-R = .0001;
+R = 70;
 
 %%
 det(ctrb(A,B))
 
 %%
-K =  lqr(A,B,Q,R);
+K =lqr(A,B,Q,R);
 s=-1;
 disp("start Int")
-tspan = 0:.001:10;
+tspan = 0:.001:100;
 if(s==-1)
-    y0 = [0; 0; stab+0.001; 0];
-    [t,y] = ode45(@(t,y)removewip(y,mp,mc,l,g,0,r,K*(y-[0; 0; stab; 0])),tspan,y0);
+    y0 = [0; 0; stab+0.1; 0];
+    [t,y] = ode45(@(t,y)removewip(y,mp,mc,l,g,0,r,-K*(y-[0; 0; stab; 0])),tspan,y0);
 elseif(s==1)
     y0 = [-3; 0; 0; 0];
 % % [t,y] = ode45(@(t,y)((A-B*K)*(y-[0; 0; pi; 0])),tspan,y0);
