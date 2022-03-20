@@ -110,7 +110,8 @@ WIP.DDx=sub_ddx;
 WIP.DDy=sub_ddy;
 WIP.DDphi=sub_ddphi;
 
-writestruct(WIP,"WIP.xml")
+%writestruct(WIP,"WIP.xml")
+disp(WIP)
 
 
 function diffun=diff_fun(fun,vars,dvars)
