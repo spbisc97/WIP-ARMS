@@ -77,11 +77,12 @@ V=Vb;
 
 L=T-V;
 disp(L)
+
+%Sostituiamo variabili Tangenti (vincolate)
 sub_phi=w_r/w_dist*(psi_r-psi_l);
 sub_dphi=w_r/w_dist*(dpsi_r-dpsi_l);
 sub_x=simplify((psi_l+psi_r+2*theta)/2*w_r*cos(sub_phi));
 sub_y=simplify((psi_l+psi_r+2*theta)/2*w_r*sin(sub_phi));
-
 sub_dx=simplify(jacobian(sub_x,[psi_l,psi_r,theta])*[dpsi_l,dpsi_r,dtheta].');
 sub_dy=simplify(jacobian(sub_y,[psi_l,psi_r,theta])*[dpsi_l,dpsi_r,dtheta].');
 subs(L,[dx dy dphi phi],[sub_dx sub_dy sub_dphi sub_phi])
