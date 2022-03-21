@@ -71,12 +71,13 @@ else
 end
 
 for k=1:100:length(t)
+    figure(1)
     drawwip(y(k,:),mp,mc,l,r);
 end
 
 %% 
 
-function drawwip(y,m,M,L,r)
+function drawwip(y,m,~,L,r)
 x = y(1);
 th = -y(3)+pi;
 
@@ -124,10 +125,9 @@ hold off
 end
 %% 
 
-function dy = removewip(y,mp,mc,l,g,d,r,F)
+function dy = removewip(y,mp,mw,l,g,d,r,F)
 theta=y(3);
 Dtheta=y(4);
-mw=mc;
 tau=F;
 
 
