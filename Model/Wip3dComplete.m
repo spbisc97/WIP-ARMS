@@ -30,25 +30,23 @@ WIP.DDphi= -(w_r*(ddpsi_l - ddpsi_r))/w_dist;
 
 A=sym(zeros(12,12));
 A(1,2)=1;
-A(2,:)=subs(jacobian(sol.DDpsi,[x Dx theta Dtheta]),[theta Dtheta],[stab,0]);
+A(2,:)=subs(jacobian(sol.DDpsi_,[x Dx theta Dtheta]),[theta Dtheta],[stab,0]);
 A(3,4)=1;
 A(4,:)=subs(jacobian(sol.DDpsi,[x Dx theta Dtheta]),[theta Dtheta],[stab,0]);
 A(5,6)=1;
 A(6,:)=subs(jacobian(sol.DDtheta,[x Dx theta Dtheta]),[theta Dtheta],[stab,0]);
-A(7,8)=1
-A(8,:)=subs(jacobian(sol.DDtheta,[x Dx theta Dtheta]),[theta Dtheta],[stab,0]);
-A(9,10)=1
-A(10,:)=subs(jacobian(sol.DDtheta,[x Dx theta Dtheta]),[theta Dtheta],[stab,0]);
-A(11,12)=1
-A(12,:)=subs(jacobian(sol.DDtheta,[x Dx theta Dtheta]),[theta Dtheta],[stab,0]);
+% A(7,8)=1
+% A(8,:)=subs(jacobian(sol.DDtheta,[x Dx theta Dtheta]),[theta Dtheta],[stab,0]);
+% A(9,10)=1
+% A(10,:)=subs(jacobian(sol.DDtheta,[x Dx theta Dtheta]),[theta Dtheta],[stab,0]);
+% A(11,12)=1
+% A(12,:)=subs(jacobian(sol.DDtheta,[x Dx theta Dtheta]),[theta Dtheta],[stab,0]);
 
 B=sym(zeros(6,1));
 B(1)=subs(jacobian(sol.DDpsi,F),[theta Dtheta],[stab,0]);
 B(2)=
 B(3)=
-B(4)=
-B(5)=
-B(6)=subs(jacobian(sol.DDtheta,F),[theta Dtheta],[stab,0]);
+
 disp(A)
 disp(B)
 eig(A)

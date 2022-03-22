@@ -49,7 +49,7 @@ Q = [10 0 0 0;
     0 1 0 0;
     0 0 10 0;
     0 0 0 100];
-R = 70;
+R = 100;
 
 %%
 det(ctrb(A,B))
@@ -60,7 +60,7 @@ s=-1;
 disp("start Int")
 tspan = 0:.001:10;
 if(s==-1)
-    y0 = [0; 0; stab+0.1; 0];
+    y0 = [3; 0; stab+0.4; 0];
     [t,y] = ode45(@(t,y)removewip(y,mp,mc,l,g,0,r,-K*(y-[0; 0; stab; 0])),tspan,y0);
 elseif(s==1)
     y0 = [-3; 0; 0; 0];
@@ -73,7 +73,7 @@ figure('Renderer','zbuffer');
 set(gca,'NextPlot','replaceChildren');
 for k=1:100:length(t)
     drawwip(y(k,:),mp,mc,l,r);
-    W((k+99)/100) = getframe;
+    W((k+99)/100) = getframe; 
 end
 movie(W,1,10)
 

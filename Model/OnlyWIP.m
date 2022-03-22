@@ -11,8 +11,8 @@ syms ddx ddy ddphi ddtheta ddpsi_r ddpsi_l
 
 
 
-vars= [theta psi_r psi_l ];
-dvars= [dtheta dpsi_r dpsi_l ];
+vars= [x y phi theta psi_r psi_l ];
+dvars= [dx dy dphi dtheta dpsi_r dpsi_l ];
 
 %parameters 
 %took similar to WIP paper with small wip (19.5cm * 10.3cm)
@@ -81,12 +81,14 @@ disp(L)
 %Sostituiamo variabili Tangenti (vincolate)
 sub_phi=w_r/w_dist*(psi_r-psi_l);
 sub_dphi=w_r/w_dist*(dpsi_r-dpsi_l);
-sub_x=simplify((psi_l+psi_r+2*theta)/2*w_r*cos(sub_phi));
-sub_y=simplify((psi_l+psi_r+2*theta)/2*w_r*sin(sub_phi));
-sub_dx=simplify(jacobian(sub_x,[psi_l,psi_r,theta])*[dpsi_l,dpsi_r,dtheta].');
-sub_dy=simplify(jacobian(sub_y,[psi_l,psi_r,theta])*[dpsi_l,dpsi_r,dtheta].');
-subs(L,[dx dy dphi phi],[sub_dx sub_dy sub_dphi sub_phi])
+% sub_x=simplify((psi_l+psi_r+2*theta)/2*w_r*cos(sub_phi));
+% sub_y=simplify((psi_l+psi_r+2*theta)/2*w_r*sin(sub_phi));
+sub_dx=simplify((dpsi_l+dpsi_r+2*dtheta)/2*w_r*cos(sub_phi));
+sub_dy=simplify((dpsi_l+dpsi_r+2*dtheta)/2*w_r*sin(sub_phi));
+L=simplify(subs(L,[dx dy dphi phi],[sub_dx sub_dy sub_dphi sub_phi]));
 
+vars= [theta psi_r psi_l ];
+dvars= [dtheta dpsi_r dpsi_l ];
 
 Q=[u_r+u_l,u_r,u_l];
 LG=EulerLagrange(vars,dvars,L,Q,2);
