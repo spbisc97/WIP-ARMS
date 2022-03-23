@@ -112,7 +112,14 @@ ddvars=[ddtheta ddpsi_r ddpsi_l ].';
 
 
 Q=[u_r+u_l,u_r,u_l];
-LG=EulerLagrange(vars,dvars,L,Q,2);
+%LG=EulerLagrange(vars,dvars,L,Q,2);
+
+lq=jacobian(L,vars).'
+lqt=jacobian(L,dvars).'
+
+
+
+
 
 LG=simplify(LG);
 disp(LG)
@@ -150,6 +157,9 @@ for i=1:length(vars)
     diffun=diffun+diff(fun,vars(i))*dvars(i);
 end
 end
+
+
+
 
 
 function EQ = EulerLagrange(s,ds,L,Q,varargin)

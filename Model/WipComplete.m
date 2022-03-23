@@ -55,7 +55,7 @@ R = 100;
 det(ctrb(A,B))
 
 %%
-K =lqr(A,B,Q,R);
+K =[0 0 0 0];%lqr(A,B,Q,R);
 s=-1;
 disp("start Int")
 tspan = 0:.001:10;
