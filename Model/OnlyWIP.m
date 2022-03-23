@@ -3,17 +3,21 @@
 %all vector are vertical by convention
 clear all%
 
+symbolic=false;
+
 syms x y phi %se(2) position
 syms theta psi_r psi_l 
 
 syms dx dy dphi dtheta dpsi_r dpsi_l 
 syms ddx ddy ddphi ddtheta ddpsi_r ddpsi_l 
 
+syms g u_r u_l
+
 
 
 vars= [x y phi theta psi_r psi_l ];
 dvars= [dx dy dphi dtheta dpsi_r dpsi_l ];
-
+if symbolic
 %parameters 
 %took similar to WIP paper with small wip (19.5cm * 10.3cm)
 syms l%=5e-2; %[m] distance from wheel axis to body center of mass 
@@ -24,16 +28,31 @@ w_dm=2*w_r; %=2*3e-2; %wheel diameter
 
 %=2*3e-2; %wheel diameter
 syms w_dist%=10e-3;  %[m]distance btw wheels
-
-syms g u_r u_l
-
 %inertia
 syms  I_bxx I_byy I_bzz 
-I_b=diag([I_bxx ,I_byy ,I_bzz]);
-syms I_axx I_ayy I_azz 
-I_a=diag([I_axx, I_ayy, I_azz]);
 syms I_wxx I_wyy I_wzz 
- I_w=diag([I_wxx, I_wyy, I_wzz]);
+syms I_axx I_ayy I_azz 
+
+else 
+l=5e-2; %[m] distance from wheel axis to body center of mass 
+m_b=30e-2; %[kg]
+m_w=3e-2;%[kg]
+w_r=3e-2; %wheel radius
+w_dm=w_r; %=2*3e-2; %wheel diameter
+
+w_dist=10e-2;  %[m]distance btw wheels
+%inertia
+I_bxx=550e-6 ;I_byy=8e-6; I_bzz=5e-6; 
+I_wxx=5e-6; I_wyy=8e-6; I_wzz=5e-6;
+syms I_axx I_ayy I_azz 
+ 
+end 
+
+
+%inertia
+I_b=diag([I_bxx ,I_byy ,I_bzz]);
+I_a=diag([I_axx, I_ayy, I_azz]);
+I_w=diag([I_wxx, I_wyy, I_wzz]);
 
 %body position
 Bp=[x+l*sin(theta)*cos(phi);...
@@ -87,14 +106,17 @@ sub_dx=simplify((dpsi_l+dpsi_r+2*dtheta)/2*w_r*cos(sub_phi));
 sub_dy=simplify((dpsi_l+dpsi_r+2*dtheta)/2*w_r*sin(sub_phi));
 L=simplify(subs(L,[dx dy dphi phi],[sub_dx sub_dy sub_dphi sub_phi]));
 
-vars= [theta psi_r psi_l ];
-dvars= [dtheta dpsi_r dpsi_l ];
+vars= [theta psi_r psi_l ].';
+dvars= [dtheta dpsi_r dpsi_l ].';
+ddvars=[ddtheta ddpsi_r ddpsi_l ].';
+
 
 Q=[u_r+u_l,u_r,u_l];
 LG=EulerLagrange(vars,dvars,L,Q,2);
 
 LG=simplify(LG);
 disp(LG)
+
 
 
 disp("Other")
@@ -105,13 +127,18 @@ disp(sub_ddx)
 disp(sub_ddx)
 disp(sub_ddphi)
 
-%put into struct
-WIP.DDtheta=LG(1);
-WIP.DDphi_r=LG(2);
-WIP.DDphi_l=LG(3);
-WIP.DDx=sub_ddx;
-WIP.DDy=sub_ddy;
-WIP.DDphi=sub_ddphi;
+EQs=ddvars(:)==LG;
+WIP=solve(EQs,ddvars);
+WIP.ddtheta=simplify(WIP.ddtheta);
+WIP.ddpsi_l=simplify(WIP.ddpsi_l);
+WIP.ddpsi_r=simplify(WIP.ddpsi_r);
+
+
+%put into struct also the other vars
+
+WIP.ddx=sub_ddx;
+WIP.ddy=sub_ddy;
+WIP.ddphi=sub_ddphi;
 
 %writestruct(WIP,"WIP.xml")
 disp(WIP)

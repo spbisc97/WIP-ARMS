@@ -1,5 +1,14 @@
 
+
+
+
 clear all, close all, clc
+
+tspan = 0:.0005:10;
+
+y0 = [0.9; 0; 0; 0;0;0];
+[t,y] = ode45(@(t,y)3dwip(y,mp,mc,l,g,0,r,0),tspan,y0);
+
 
 
 syms x theta Dtheta Dx
@@ -18,12 +27,7 @@ syms Tr r mw g mp l Te  tau
 
 
 
-WIP.DDtheta=(u_l + u_r + g*l*m_b*sin(theta))/(m_b*l^2 + I_b);
-WIP.DDphi_r=u_r/I_w;
-WIP.DDphi_l=u_l/I_w;
-WIP.DDx= dpsi_r*(dpsi_r*((w_r^2*sin((w_r*(psi_l - psi_r))/w_dist))/w_dist - (w_r^3*cos((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist^2) + (dtheta*w_r^2*sin((w_r*(psi_l - psi_r))/w_dist))/w_dist + (dpsi_l*w_r^3*cos((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist^2) - dpsi_l*(dpsi_l*((w_r^2*sin((w_r*(psi_l - psi_r))/w_dist))/w_dist + (w_r^3*cos((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist^2) + (dtheta*w_r^2*sin((w_r*(psi_l - psi_r))/w_dist))/w_dist - (dpsi_r*w_r^3*cos((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist^2) + ddpsi_l*(0.5000*w_r*cos((w_r*(psi_l - psi_r))/w_dist) - (w_r^2*sin((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist) + ddpsi_r*(0.5000*w_r*cos((w_r*(psi_l - psi_r))/w_dist) + (w_r^2*sin((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist) + ddtheta*w_r*cos((w_r*(psi_l - psi_r))/w_dist) - (dtheta*w_r^2*sin((w_r*(psi_l - psi_r))/w_dist)*(dpsi_l - dpsi_r))/w_dist;
-WIP.DDy= dpsi_r*(dpsi_r*((w_r^2*cos((w_r*(psi_l - psi_r))/w_dist))/w_dist + (w_r^3*sin((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist^2) + (dtheta*w_r^2*cos((w_r*(psi_l - psi_r))/w_dist))/w_dist - (dpsi_l*w_r^3*sin((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist^2) - dpsi_l*(dpsi_l*((w_r^2*cos((w_r*(psi_l - psi_r))/w_dist))/w_dist - (w_r^3*sin((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist^2) + (dtheta*w_r^2*cos((w_r*(psi_l - psi_r))/w_dist))/w_dist + (dpsi_r*w_r^3*sin((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist^2) - ddpsi_l*(0.5000*w_r*sin((w_r*(psi_l - psi_r))/w_dist) + (w_r^2*cos((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist) - ddpsi_r*(0.5000*w_r*sin((w_r*(psi_l - psi_r))/w_dist) - (w_r^2*cos((w_r*(psi_l - psi_r))/w_dist)*(0.5000*psi_l + 0.5000*psi_r + theta))/w_dist) - ddtheta*w_r*sin((w_r*(psi_l - psi_r))/w_dist) - (dtheta*w_r^2*cos((w_r*(psi_l - psi_r))/w_dist)*(dpsi_l - dpsi_r))/w_dist;
-WIP.DDphi= -(w_r*(ddpsi_l - ddpsi_r))/w_dist;
+
 
 
 
@@ -70,11 +74,11 @@ disp("start Int")
 tspan = 0:.0005:10;
 if(s==-1)
     y0 = [0; 0; stab+0.9; 0];
-    [t,y] = ode45(@(t,y)removewip(y,mp,mc,l,g,0,r,K*(y-[0; 0; stab; 0])),tspan,y0);
+    [t,y] = ode45(@(t,y)3dwip(y,mp,mc,l,g,0,r,K*(y-[0; 0; stab; 0])),tspan,y0);
 elseif(s==1)
     y0 = [-3; 0; 0; 0];
 % % [t,y] = ode45(@(t,y)((A-B*K)*(y-[0; 0; pi; 0])),tspan,y0);
-    [t,y] = ode45(@(t,y)removewip(y,mp,mc,l,g,0,r,-K*(y-[0; 0; 0; 0])),tspan,y0);
+    [t,y] = ode45(@(t,y)3dwip(y,mp,mc,l,g,0,r,-K*(y-[0; 0; 0; 0])),tspan,y0);
 else
     
 end
@@ -133,17 +137,22 @@ hold off
 end
 %% 
 
-function dy = removewip(y,mp,mc,l,g,d,r,F,WIP)
+function dy = d3wip(y,mp,mc,l,g,d,r,u_r,u_l)
 theta=y(3);
-Dtheta=y(4);
-mw=mc;
-tau=F;
+dtheta=y(4);
+psi_l
+dpsi_l
+psi_r
+dpsi_r
+
 
 
 dy(1,1) = y(2);
-dy(2,1) = (12*tau + l*tau + 12*r*tau*cos(theta) + 12*Dtheta^2*l*mp*r*sin(theta) + Dtheta^2*l^2*mp*r*sin(theta) - 12*g*l*mp*r*cos(theta)*sin(theta))/(r^2*(12*mp + 24*mw + l*mp + 2*l*mw - 12*l*mp*cos(theta)^2));
+dy(2,1) = (5.0000e-04*(1.0889e+46*u_l + 1.0889e+46*u_r + 4.9001e+42*dtheta^2*sin(theta) + 1.3484e+43*dpsi_l^2*sin(2*theta) + 1.3484e+43*dpsi_r^2*sin(2*theta) - 6.8907e+43*dtheta^2*sin(2*theta) - 3.0625e+47*u_l*cos(theta) - 3.0625e+47*u_r*cos(theta) + 3.4709e+45*g*sin(theta) - 2.6969e+43*dpsi_l*dpsi_r*sin(2*theta)))/(4.9001e+39*cos(theta) - 6.8907e+40*cos(theta)^2 + 8.9462e+40);
 dy(3,1) = y(4);
-dy(4,1) = -(12*(mp*r*tau + 2*mw*r*tau + l*mp*tau*cos(theta) - g*l*mp^2*r*sin(theta) - 2*g*l*mp*mw*r*sin(theta) + Dtheta^2*l^2*mp^2*r*cos(theta)*sin(theta)))/(l*mp*r*(12*mp + 24*mw + l*mp + 2*l*mw - 12*l*mp*cos(theta)^2));
+dy(4,1) = -(0.0080*(3.1739e+63*dpsi_l^2*sin(theta) - 3.1032e+68*u_r - 5.6642e+67*u_l + 3.1739e+63*dpsi_r^2*sin(theta) - 1.1376e+65*dtheta^2*sin(theta) + 5.9193e+67*u_l*cos(2*theta) + 4.1152e+67*u_l*cos(3*theta) + 2.1808e+68*u_r*cos(2*theta) + 4.1152e+67*u_r*cos(3*theta) + 8.1695e+65*g*sin(2*theta) - 4.4444e+65*g*sin(3*theta) - 3.0864e+65*g*sin(4*theta) + 4.5704e+63*dpsi_l^2*sin(2*theta) + 1.9748e+63*dpsi_l^2*sin(3*theta) - 1.7267e+63*dpsi_l^2*sin(4*theta) - 1.1991e+63*dpsi_l^2*sin(5*theta) + 4.5704e+63*dpsi_r^2*sin(2*theta) + 1.9748e+63*dpsi_r^2*sin(3*theta) - 1.7267e+63*dpsi_r^2*sin(4*theta) - 1.1991e+63*dpsi_r^2*sin(5*theta) - 2.4509e+64*dtheta^2*sin(2*theta) + 3.1193e+64*dtheta^2*sin(3*theta) + 9.2593e+63*dtheta^2*sin(4*theta) - 5.6476e+67*u_l*cos(theta) - 7.9074e+67*u_r*cos(theta) + 1.6209e+66*g*sin(theta) - 6.3477e+63*dpsi_l*dpsi_r*sin(theta) - 1.3169e+63*dpsi_l*dtheta*sin(theta) + 1.3169e+63*dpsi_r*dtheta*sin(theta) - 9.1407e+63*dpsi_l*dpsi_r*sin(2*theta) - 3.9496e+63*dpsi_l*dpsi_r*sin(3*theta) + 3.4533e+63*dpsi_l*dpsi_r*sin(4*theta) + 2.3981e+63*dpsi_l*dpsi_r*sin(5*theta) - 2.9566e+64*dpsi_l*dtheta*sin(2*theta) - 1.3169e+63*dpsi_l*dtheta*sin(3*theta) + 9.2593e+63*dpsi_l*dtheta*sin(4*theta) + 2.9566e+64*dpsi_r*dtheta*sin(2*theta) + 1.3169e+63*dpsi_r*dtheta*sin(3*theta) - 9.2593e+63*dpsi_r*dtheta*sin(4*theta)))/(4.8955e+61*cos(theta) - 1.4578e+63*cos(theta)^2 - 4.2140e+61*cos(theta)^3 + 5.9259e+62*cos(theta)^4 + 8.9379e+62);
+dy(5,1) = y(6);
+dy(6,1) = -(0.0080*(3.1739e+63*dpsi_l^2*sin(theta) - 5.6642e+67*u_r - 3.1032e+68*u_l + 3.1739e+63*dpsi_r^2*sin(theta) - 1.1376e+65*dtheta^2*sin(theta) + 2.1808e+68*u_l*cos(2*theta) + 4.1152e+67*u_l*cos(3*theta) + 5.9193e+67*u_r*cos(2*theta) + 4.1152e+67*u_r*cos(3*theta) + 8.1695e+65*g*sin(2*theta) - 4.4444e+65*g*sin(3*theta) - 3.0864e+65*g*sin(4*theta) + 4.5704e+63*dpsi_l^2*sin(2*theta) + 1.9748e+63*dpsi_l^2*sin(3*theta) - 1.7267e+63*dpsi_l^2*sin(4*theta) - 1.1991e+63*dpsi_l^2*sin(5*theta) + 4.5704e+63*dpsi_r^2*sin(2*theta) + 1.9748e+63*dpsi_r^2*sin(3*theta) - 1.7267e+63*dpsi_r^2*sin(4*theta) - 1.1991e+63*dpsi_r^2*sin(5*theta) - 2.4509e+64*dtheta^2*sin(2*theta) + 3.1193e+64*dtheta^2*sin(3*theta) + 9.2593e+63*dtheta^2*sin(4*theta) - 7.9074e+67*u_l*cos(theta) - 5.6476e+67*u_r*cos(theta) + 1.6209e+66*g*sin(theta) - 6.3477e+63*dpsi_l*dpsi_r*sin(theta) + 1.3169e+63*dpsi_l*dtheta*sin(theta) - 1.3169e+63*dpsi_r*dtheta*sin(theta) - 9.1407e+63*dpsi_l*dpsi_r*sin(2*theta) - 3.9496e+63*dpsi_l*dpsi_r*sin(3*theta) + 3.4533e+63*dpsi_l*dpsi_r*sin(4*theta) + 2.3981e+63*dpsi_l*dpsi_r*sin(5*theta) + 2.9566e+64*dpsi_l*dtheta*sin(2*theta) + 1.3169e+63*dpsi_l*dtheta*sin(3*theta) - 9.2593e+63*dpsi_l*dtheta*sin(4*theta) - 2.9566e+64*dpsi_r*dtheta*sin(2*theta) - 1.3169e+63*dpsi_r*dtheta*sin(3*theta) + 9.2593e+63*dpsi_r*dtheta*sin(4*theta)))/(4.8955e+61*cos(theta) - 1.4578e+63*cos(theta)^2 - 4.2140e+61*cos(theta)^3 + 5.9259e+62*cos(theta)^4 + 8.9379e+62);
 
 disp(dy.')
 %pause
