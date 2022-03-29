@@ -55,15 +55,15 @@ R = 100;
 det(ctrb(A,B))
 
 %%
-K =[0 0 0 0];%lqr(A,B,Q,R);
+K =lqr(A,B,Q,R);
 s=-1;
 disp("start Int")
 tspan = 0:.001:10;
 if(s==-1)
-    y0 = [3; 0; stab+0.4; 0];
+    y0 = [0; 0; stab+0.3; 0];
     [t,y] = ode45(@(t,y)removewip(y,mp,mc,l,g,0,r,-K*(y-[0; 0; stab; 0])),tspan,y0);
 elseif(s==1)
-    y0 = [-3; 0; 0; 0];
+    y0 = [0; 0; 0; 0];
 % % [t,y] = ode45(@(t,y)((A-B*K)*(y-[0; 0; pi; 0])),tspan,y0);
     [t,y] = ode45(@(t,y)removewip(y,mp,mc,l,g,0,r,-K*(y-[0; 0; 0; 0])),tspan,y0);
 else

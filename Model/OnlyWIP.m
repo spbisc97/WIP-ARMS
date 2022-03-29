@@ -6,7 +6,7 @@ clear all%
 symbolic=false;
 
 syms x y phi %se(2) position
-syms theta psi_r psi_l 
+syms theta psi_r psi_l %body position and wheel position
 
 syms dx dy dphi dtheta dpsi_r dpsi_l 
 syms ddx ddy ddphi ddtheta ddpsi_r ddpsi_l 
@@ -97,7 +97,7 @@ V=Vb;
 L=T-V;
 disp(L)
 
-%Sostituiamo variabili Tangenti (vincolate)
+%Sostituiamo variabili Tangenti (vincolate) se(2)
 sub_phi=w_r/w_dist*(psi_r-psi_l);
 sub_dphi=w_r/w_dist*(dpsi_r-dpsi_l);
 % sub_x=simplify((psi_l+psi_r+2*theta)/2*w_r*cos(sub_phi));
@@ -112,10 +112,9 @@ ddvars=[ddtheta ddpsi_r ddpsi_l ].';
 
 
 Q=[u_r+u_l,u_r,u_l];
-%LG=EulerLagrange(vars,dvars,L,Q,2);
+LG=EulerLagrange(vars,dvars,L,Q,2);
 
-lq=jacobian(L,vars).'
-lqt=jacobian(L,dvars).'
+
 
 
 
@@ -143,9 +142,9 @@ WIP.ddpsi_r=simplify(WIP.ddpsi_r);
 
 %put into struct also the other vars
 
-WIP.ddx=sub_ddx;
-WIP.ddy=sub_ddy;
-WIP.ddphi=sub_ddphi;
+WIP.ddx=subs(sub_ddx,[ddtheta,ddpsi_l,ddpsi_r],[WIP.ddtheta,WIP.ddpsi_l,WIP.ddpsi_r]);
+WIP.ddy=subs(sub_ddy,[ddtheta,ddpsi_l,ddpsi_r],[WIP.ddtheta,WIP.ddpsi_l,WIP.ddpsi_r]);
+WIP.ddphi=subs(sub_ddphi,[ddtheta,ddpsi_l,ddpsi_r],[WIP.ddtheta,WIP.ddpsi_l,WIP.ddpsi_r]);
 
 %writestruct(WIP,"WIP.xml")
 disp(WIP)
