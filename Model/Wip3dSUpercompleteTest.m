@@ -98,12 +98,55 @@ elseif(s==1)
 else
     
 end
+figure('Name','body')
+tiledlayout(1,2);
+nexttile
+plot(t,y(:,1).')
+legend('theta')
+nexttile
+plot(t,y(:,2).')
+legend('dtheta')
 
-plot(t,y.')
-legend('theta','dtheta','psi_r','dpsi_r','psi_l','dpsi_l','x','dx','y','dy','phi','dphi')
-% for k=1:100:length(t)
-%     drawwip(y(k,:),mp,mc,l,r);
-% end
+figure('Name','Wheels')
+tiledlayout(2,2);
+nexttile
+plot(t,y(:,3).')
+legend('psi_r')
+nexttile
+plot(t,y(:,4).')
+legend('dpsi_r')
+nexttile
+plot(t,y(:,5).')
+legend('psi_l')
+nexttile
+plot(t,y(:,6).')
+legend('dpsi_l')
+
+figure('Name','Se(2)')
+tiledlayout(3,2);
+nexttile
+plot(t,y(:,7).')
+legend('x')
+nexttile
+plot(t,y(:,8).')
+legend('dx')
+nexttile
+plot(t,y(:,9).')
+legend('y')
+nexttile
+plot(t,y(:,10).')
+legend('dy')
+nexttile
+plot(t,y(:,11).')
+legend('phi')
+nexttile
+plot(t,y(:,12).')
+legend('dphi')
+
+
+
+
+%legend('theta','dtheta','psi_r','dpsi_r','psi_l','dpsi_l','x','dx','y','dy','phi','dphi')
 
 %% 
 
