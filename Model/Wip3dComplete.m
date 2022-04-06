@@ -66,7 +66,7 @@ pause
 
 %%
 % We can use lqr on only the first two vars (theta, dtheta) to get the controls u_l u_r %
-%K = lqr(A(1:2,1:2),B(1:2,1:2),Q(1:2,1:2),R(1:2,1:2));
+K = lqr(A(1:2,1:2),B(1:2,1:2),Q(1:2,1:2),R(1:2,1:2));
 
 %K = lqr(A,B,Q,R); 
 disp(K)
@@ -75,9 +75,9 @@ s=-1;
 disp("start Int")
 tspan = 0:.001:10;
 if(s==-1)
-    y0 = [stab+0.001;0;0;0;0;0];
-    %[t,y] = ode45(@(t,y)d3wip(y,0,0,0,9.81,0,0,-K*(y(1:2)-[0;0])),tspan,y0);%T*
-    [t,y] = ode45(@(t,y)d3wip(y,0,0,0,9.81,0,0,-K*(y-[stab;0;0;0;0;0])),tspan,y0);
+    y0 = [stab+0.01;0;0;0;0;0];
+    [t,y] = ode45(@(t,y)d3wip(y,0,0,0,9.81,0,0,-K*(y(1:2)-[0;0])),tspan,y0);%T*
+    %[t,y] = ode45(@(t,y)d3wip(y,0,0,0,9.81,0,0,-K*(y-[stab;0;0;0;0;0])),tspan,y0);
 elseif(s==1)
     y0 = [stab+0.001; 0; 0; 0;0;0];
     [t,y] = ode45(@(t,y)d3wip(y,0,0,0,9.81,0,0,[0,0]),tspan,y0);
