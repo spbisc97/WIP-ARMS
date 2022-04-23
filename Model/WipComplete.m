@@ -1,6 +1,8 @@
 
 clear all, close all, clc
 
+q
+
 
 syms x theta Dtheta Dx
 syms DDx DDtheta  F mp mc l g 
@@ -61,7 +63,7 @@ disp("start Int")
 tspan = 0:.001:10;
 if(s==-1)
     y0 = [0; 0; stab+0.3; 0];
-    [t,y] = ode45(@(t,y)removewip(y,mp,mc,l,g,0,r,-K*(y-[0; 0; stab; 0])),tspan,y0);
+    [t,y] = ode45(@(t,y)removewip(y,mp,mc,l,g,0,r,0),tspan,y0);
 elseif(s==1)
     y0 = [0; 0; 0; 0];
 % % [t,y] = ode45(@(t,y)((A-B*K)*(y-[0; 0; pi; 0])),tspan,y0);
