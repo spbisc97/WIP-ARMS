@@ -2,8 +2,8 @@ function u=LQR_function(state,state_d)
 
 u=0;
 
-Q = 100;
-R = 0.01;
+Q = 50;
+R = 4;
 horizon=10;
 P_f=eye(1);
 P=P_f;
