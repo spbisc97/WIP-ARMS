@@ -1,22 +1,20 @@
-function u=LQR_function(state,state_d)
+function u=LQR_function(state,state_d,Q,R)
 
 u=0;
 
-Q = 50;
-R = 4;
-horizon=10;
+ 
+horizon=100;
 P_f=eye(1);
 P=P_f;
-
+%state_d=state_d-state;
 
 for step = 1:horizon-1
-    disp(P)
     [A,B]=linearization_discretization(u,state);
     P_next=A'*P*A-(A'*P*B)*pinv(R+B'*P*B)*(B'*P*A)+Q; 
     P=P_next;
     
 end
-K=(R+B'*P*B)*(B'*P*A);
+K=pinv(R+B'*P*B)*(B'*P*A);
 disp('')
 
 
