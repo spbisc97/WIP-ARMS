@@ -17,9 +17,13 @@ horizon=3; %time S
 horizon_disc=floor(horizon/dt);
 Q = 100;
 R = 10;
+S=repmat(Q,horizon_disc,1);
+L=repmat(0,horizon_disc,1);
+l=repmat(0,horizon_disc,1);
+
 state_array=[];
 control_array=[];
-time_array=[];
+time_array=[];horizon
 
 P_f=eye(1);
 P=P_f;
@@ -37,28 +41,40 @@ while t<it+horizon
 end
 defects=state_array(1:horizon_disc)-state_d(1:horizon_disc);
 
-  
+
 
 for iteration = 1:iterations-1
-    
+    s=repmat(S.*state_array);
+
+
     A_=[];
     B_=[];
     for step=1:horizon_disc
         [A_(step),B_(step)]=linearization_discretization(u(step),state_array(step));
     end
-    for step=0:horizon_disc-1
-        P=1;
-        A=A_(horizon_disc-step);
-        B=B_(horizon_disc-step);
-        for i=1:3
-            P_next=A'*P*A-(A'*P*B)*pinv(R+B'*P*B)*(B'*P*A)+Q; 
-            P=P_next;
-        end
-        K=(R+B'*P*B)*(B'*P*A);
-        disp('')
+    for step=1:horizon_disc
+        P=0;%set mixed weight to zero
+        n=horizon_disc-step;
+        A=A_(n);
+        B=B_(n);
+        r=R*state_array(n);
+        H=R+B'*(s(n+1)+S(n+1)*defects(n));
+        G=P+B'*S(n+1)*A;
+        h=r+B'*S(n+1)*B;
 
-        u(horizon_disc-step)=-K*(state_array(horizon_disc-step)-state_d(horizon_disc-step));
+        L(n)=-pinv(H)*h;
+        l(n)=-pinv(H)*G;
+
+        q=Q*state_array(n);
+        S(n)=Q+A'*S(n+1)*A-L'*H*L;
+        s(n)=q*A'*(s(n+1)+S(n+1)*defects(n))+G'*l(n)+L(n)'*(h+H*l);
     end
+    for step=1:horizon_disc
+        
+    
+    end
+
+
 end
 disp(u)
 u=u(1);

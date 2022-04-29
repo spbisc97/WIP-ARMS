@@ -11,7 +11,7 @@ end
 y=1.5; %initial point
 t=0.01;%initial time
 tf=3;%final time
-dt=0.01;%time increase
+dt=0.01;%increasing time %time step
 
 time=t:dt:tf; %time array
 traj_d=-0.06*(time-1.7).^5+0.6; %desired trajectory 
@@ -24,8 +24,8 @@ while t<tf %process start
 
     %find u control
     y_des=traj_d(floor(t/dt));
-    u=iLQR_function(y,traj_d,t);
-    %u=LQR_function(y,y_des,Q,R);   
+    %u=iLQR_function(y,traj_d,t);
+    u=LQR_function(y,y_des,Q,R);   
     %save to plot
     control_array = [control_array,u];
     time_array=[time_array,t];
