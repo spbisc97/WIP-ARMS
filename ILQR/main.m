@@ -24,8 +24,8 @@ while t<tf %process start
 
     %find u control
     y_des=traj_d(floor(t/dt));
-    %u=iLQR_function(y,traj_d,t);
-    u=LQR_function(y,y_des,Q,R);   
+    u=iLQR_function(y,traj_d(floor(t/dt):end),t);
+    %u=LQR_function(y,y_des,Q,R);   
     %save to plot
     control_array = [control_array,u];
     time_array=[time_array,t];
