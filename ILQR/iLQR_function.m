@@ -15,15 +15,15 @@ disp("ilqr")
 Q = 10;
 R = 0.01;
 
-iterations=50;
-horizon=0.06; %time S
+iterations=100;
+horizon=0.1; %time S
 horizon_disc=floor(horizon/dt);
 if horizon_disc>sz
     horizon=sz*dt;
     horizon_disc=sz;
 end
 
-S=repmat(Q,horizon_disc,1);
+S=repmat(Q,horizon_disc+1,1);
 L=zeros(horizon_disc,1);
 l=zeros(horizon_disc,1);
 u=ones(horizon_disc,1)*(0);
@@ -45,13 +45,11 @@ time_array=[];
 while t<it+horizon
     %compute the forward dynamics to define the defects
     elem=floor((t-it+dt)/dt);
-
     dy=ForwardDynamics(state,u(elem));
     state=euler_integration_fun(state,dy,dt);
     control_array=[control_array;u(elem)];
     time_array=[time_array;t];
     state_array = [state_array;state];
-
     t=t+dt;
 end
 % disp("istate")
@@ -69,8 +67,8 @@ end
 defects=state_array(1:horizon_disc)-state_d(1:horizon_disc);
 %disp("defects")
 %disp(defects(:)')
-s=zeros(horizon_disc,1);
-s(horizon_disc)=Q*state_array(horizon_disc);
+s=zeros(horizon_disc+1,1);
+s(horizon_disc+1)=Q*state_array(horizon_disc);
 
 %start the optimizing iterations
 for iteration = 1:iterations-1
@@ -81,8 +79,6 @@ for iteration = 1:iterations-1
     %pause
     %fill the s matrix , expecially the last element
     %last element = horizon_disc
-
-
     A_=[];
     B_=[];
     %compute the linearized dynamics
@@ -90,8 +86,8 @@ for iteration = 1:iterations-1
         [A_(step),B_(step)]=linearization_discretization(u(step),state_array(step));
     end
     %backword iteration
-    for step=1:horizon_disc-1 %horizon_disc-1 times
-        n=horizon_disc-step;
+    for step=1:horizon_disc %horizon_disc-1 times
+        n=horizon_disc-step+1;
         P=0;%set mixed weight to zero delta_u*P*delta_x
        
         A=A_(n);
@@ -99,9 +95,9 @@ for iteration = 1:iterations-1
 
         %compute r,h,G,H to simplify S and s computations
         r=R*u(n); %should be the derivative of uRu
-        h=r+B'*S(n+1)*B;
+        h=r+B'*(s(n+1)+S(n+1)*defects(n));
         G=P+B'*S(n+1)*A;
-        H=R+B'*(s(n+1)+S(n+1)*defects(n));
+        H=R+B'*S(n+1)*B;
         %disp(["H","G","h"])
         %disp([H,G,h])
 
@@ -114,7 +110,7 @@ for iteration = 1:iterations-1
         %disp([L(n),l(n),n])
 
         %compute next S,s Value
-        S(n)=Q+A' *S(n+1)*A-L(n)'*H*L(n);
+        S(n)=Q+A'*S(n+1)*A-L(n)'*H*L(n);
         q=Q*defects(n);
         s(n)=q+A'*(s(n+1)+S(n+1)*defects(n))+G'*l(n)+L(n)'*(h+H*l(n));
         %disp(["S","s","n"])
@@ -129,9 +125,11 @@ for iteration = 1:iterations-1
     disp(L')
     disp("S")
     disp(S')
+    disp("s")
+    disp(s')
     
     %forward iteration
-    for n=1:horizon_disc-1
+    for n=1:horizon_disc
         %compute delta_u and update the value
         delta_u=l(n)+L(n)*defects(n);
         u(n)=u(n)+delta_u;
@@ -147,13 +145,11 @@ for iteration = 1:iterations-1
     while t<it+horizon
         %compute the forward dynamics to define the defects
         elem=floor((t-it+dt)/dt);
-
         dy=ForwardDynamics(state,u(elem));
         state=euler_integration_fun(state,dy,dt);
         control_array=[control_array;u(elem)];
         time_array=[time_array;t];
         state_array = [state_array;state];
-
         t=t+dt;
     end
 
@@ -175,9 +171,9 @@ for iteration = 1:iterations-1
     disp(defects(:)')
     disp("control")
     disp(u')
-
     plot(time_array,state_array)
-    pause(0.1)
+    pause
+
 
 
 end
