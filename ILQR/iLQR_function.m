@@ -15,8 +15,8 @@ disp("ilqr")
 Q = 10;
 R = 0.01;
 
-iterations=50;
-horizon=0.06; %time S
+iterations=10;
+horizon=0.1; %time S
 horizon_disc=floor(horizon/dt);
 if horizon_disc>sz
     horizon=sz*dt;
@@ -99,9 +99,9 @@ for iteration = 1:iterations-1
 
         %compute r,h,G,H to simplify S and s computations
         r=R*u(n); %should be the derivative of uRu
-        h=r+B'*S(n+1)*B;
+        h=r+B'*(s(n+1)+S(n+1)*defects(n));
         G=P+B'*S(n+1)*A;
-        H=R+B'*(s(n+1)+S(n+1)*defects(n));
+        H=R+B'*S(n+1)*B;
         %disp(["H","G","h"])
         %disp([H,G,h])
 
