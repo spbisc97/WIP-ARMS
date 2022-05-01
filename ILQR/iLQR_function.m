@@ -15,11 +15,8 @@ disp("ilqr")
 Q = 10;
 R = 0.01;
 
-<<<<<<< HEAD
-iterations=100;
-=======
+
 iterations=10;
->>>>>>> main
 horizon=0.1; %time S
 horizon_disc=floor(horizon/dt);
 if horizon_disc>sz
