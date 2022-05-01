@@ -10,16 +10,16 @@ end
 
 y=1.5; %initial point
 t=0.01;%initial time
-tf=3;%final time
+tf=1;%final time
 dt=0.01;%increasing time %time step
 
 time=t:dt:tf; %time array
 traj_d=-0.06*(time-1.7).^5+0.6; %desired trajectory 
+%traj_d=0*(time-1.7);
 state_array=[]; %array degli stati
 control_array=[]; %array del controllo 
 time_array=[]; %array del tempo (dovrebbe coincidere con la l'array "time")
 y_d_array=[];%array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
-
 while t<tf %process start
 
     %find u control
