@@ -3,7 +3,7 @@ state_d=state_d(:);
 dt=0.01;
 t=it;
 state=istate;
-disp("ilqr")
+%disp("ilqr")
 
 %pause
 
@@ -119,7 +119,7 @@ for iteration = 1:iterations-1
 
     end
     disp("iter")
-    disp(n)
+    disp(iteration)
     disp("l")
     disp(l')
     disp("L")
@@ -173,14 +173,14 @@ for iteration = 1:iterations-1
     disp("control")
     disp(u')
     plot(time_array,state_array)
-    pause
+    pause(0.1)
 
 
 
 end
 
-disp("next control")
-disp(u(1))
+% disp("next control")
+% disp(u(1))
 u=u(1);
 %save('ilqrVars.mat') % save variables to
 
