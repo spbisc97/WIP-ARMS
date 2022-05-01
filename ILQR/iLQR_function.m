@@ -1,4 +1,5 @@
-function u=iLQR_function(istate,state_d,it)
+function u_next=iLQR_function(istate,state_d,it)
+global u
 state_d=state_d(:);
 dt=0.01;
 t=it;
@@ -16,7 +17,7 @@ Q = 10;
 R = 0.01;
 
 
-iterations=10;
+iterations=50;
 horizon=0.1; %time S
 horizon_disc=floor(horizon/dt);
 if horizon_disc>sz
@@ -27,8 +28,13 @@ end
 S=repmat(Q,horizon_disc+1,1);
 L=zeros(horizon_disc,1);
 l=zeros(horizon_disc,1);
-u=ones(horizon_disc,1)*(0);
-
+if exist("u","var")
+    [usz,~]=size(u);
+    u=[0;u];
+    u=[u(3:end);zeros(horizon_disc-usz+1,1)];
+else
+    u=ones(horizon_disc,1)*(0);
+end
 
 state_array=[];
 control_array=[];
@@ -66,6 +72,7 @@ end
 %defects=distance between state array and desired state
 %(traj and desired trajectory)
 defects=state_array(1:horizon_disc)-state_d(1:horizon_disc);
+defects(1:end-1)=0;
 %disp("defects")
 %disp(defects(:)')
 s=zeros(horizon_disc+1,1);
@@ -160,6 +167,7 @@ for iteration = 1:iterations-1
     %defects=distance between state array and desired state
     %(traj and desired trajectory)
     defects=state_array(1:horizon_disc)-state_d(1:horizon_disc);
+    defects(1:end-1)=0;
     disp("istate")
     disp(istate')
     disp("state array")
@@ -181,7 +189,7 @@ end
 
 % disp("next control")
 % disp(u(1))
-u=u(1);
+u_next=u(1);
 %save('ilqrVars.mat') % save variables to
 
 end

@@ -14,8 +14,8 @@ tf=3;%final time
 dt=0.01;%increasing time %time step
 
 time=t:dt:tf; %time array
-traj_d=-0.06*(time-1.7).^5+0.6; %desired trajectory 
-%traj_d=0*(time-1.7);
+%traj_d=-0.06*(time-1.7).^5+0.6; %desired trajectory 
+traj_d=0*(time-1.7);
 state_array=[]; %array degli stati
 control_array=[]; %array del controllo 
 time_array=[]; %array del tempo (dovrebbe coincidere con la l'array "time")
