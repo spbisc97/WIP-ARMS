@@ -18,7 +18,7 @@ R = 0.01;
 
 
 iterations=50;
-horizon=0.1; %time S
+horizon=0.04; %time S
 horizon_disc=floor(horizon/dt);
 if horizon_disc>sz
     horizon=sz*dt;
@@ -72,7 +72,7 @@ end
 %defects=distance between state array and desired state
 %(traj and desired trajectory)
 defects=state_array(1:horizon_disc)-state_d(1:horizon_disc);
-defects(1:end-1)=0;
+% defects(1:end-1)=0;
 %disp("defects")
 %disp(defects(:)')
 s=zeros(horizon_disc+1,1);
@@ -167,7 +167,7 @@ for iteration = 1:iterations-1
     %defects=distance between state array and desired state
     %(traj and desired trajectory)
     defects=state_array(1:horizon_disc)-state_d(1:horizon_disc);
-    defects(1:end-1)=0;
+%     defects(1:end-1)=0;
     disp("istate")
     disp(istate')
     disp("state array")
