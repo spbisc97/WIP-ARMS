@@ -17,8 +17,8 @@ Q = 10;
 R = 0.01;
 
 
-iterations=50;
-horizon=0.04; %time S
+iterations=20;
+horizon=0.1; %time S
 horizon_disc=floor(horizon/dt);
 if horizon_disc>sz
     horizon=sz*dt;
@@ -76,14 +76,14 @@ defects=state_array(1:horizon_disc)-state_d(1:horizon_disc);
 %disp("defects")
 %disp(defects(:)')
 s=zeros(horizon_disc+1,1);
-s(horizon_disc+1)=Q*state_array(horizon_disc);
+s(horizon_disc+1,1)=Q*state_array(horizon_disc,1);
 
 %start the optimizing iterations
 for iteration = 1:iterations-1
     %pause(0.1)
 
     %dispvar()
-    %plot(defects)
+    %plot(defects)cos(y(3))
     %pause
     %fill the s matrix , expecially the last element
     %last element = horizon_disc
@@ -103,7 +103,7 @@ for iteration = 1:iterations-1
 
         %compute r,h,G,H to simplify S and s computations
         r=R*u(n); %should be the derivative of uRu
-        h=r+B'*(s(n+1)+S(n+1)*defects(n));
+        h=r+B'*(s(n+1)+S(n+1)*defects(:,n));
         G=P+B'*S(n+1)*A;
         H=R+B'*S(n+1)*B;
         %disp(["H","G","h"])
@@ -119,8 +119,8 @@ for iteration = 1:iterations-1
 
         %compute next S,s Value
         S(n)=Q+A'*S(n+1)*A-L(n)'*H*L(n);
-        q=Q*defects(n);
-        s(n)=q+A'*(s(n+1)+S(n+1)*defects(n))+G'*l(n)+L(n)'*(h+H*l(n));
+        q=Q*defects(:,n);
+        s(n)=q+A'*(s(n+1)+S(n+1)*defects(:,n))+G'*l(n)+L(n)'*(h+H*l(n));
         %disp(["S","s","n"])
         %disp([S(n),s(n),n])
 
@@ -139,7 +139,7 @@ for iteration = 1:iterations-1
     %forward iteration
     for n=1:horizon_disc
         %compute delta_u and update the value
-        delta_u=l(n)+L(n)*defects(n);
+        delta_u=l(n)+L(n)*defects(:,n));
         u(n)=u(n)+delta_u;
     end
 
@@ -174,8 +174,6 @@ for iteration = 1:iterations-1
     disp(state_array')
     disp("state_d traj")
     disp(state_d(1:horizon_disc)')
-   
-
     disp("defects")
     disp(defects(:)')
     disp("control")
