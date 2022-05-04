@@ -6,6 +6,8 @@ function u_next = iLQR_function(istate, state_d, it)
     
     % disp(state_d)
     global u
+    u_next = 0;
+
     dt = 0.01;
     t = it;
     state = istate;
@@ -21,6 +23,12 @@ function u_next = iLQR_function(istate, state_d, it)
     R = 0.01;
 
     iterations = 100;
+    cost=0;
+    new_cost=0;
+    j_rm=0.002;
+    defects_max=ones(n_states,1);
+    defects_max(2,1)=20;
+    defects_max(4,1)=20;
     horizon = 3; %time S
     horizon_disc = floor(horizon / dt);
 
@@ -180,7 +188,26 @@ function u_next = iLQR_function(istate, state_d, it)
         disp(u')
         plot(time_array, state_array)
         legend("x","dx","phi","dphi")
+
+        new_cost=0;
+        for i=1:horizon_disc
+            new_cost=new_cost+defects(:,i)'*Q*defects(:,i)+control_array(:,i)'*R*control_array(:,i);
+        end
+        disp("new_cost")
+        disp(new_cost)
         pause(0.1)
+            %check cost increments and return if solved
+            
+        if((abs(new_cost-cost)/new_cost < j_rm) && sum(sum(abs(defects'))'<defects_max))
+            return
+        end
+        
+        cost=new_cost;
+
+        
+
+
+
 
     end
 
