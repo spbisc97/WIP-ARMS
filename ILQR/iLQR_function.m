@@ -15,8 +15,8 @@ function u_next = iLQR_function(istate, state_d, it)
 
     [n_states, sz] = size(state_d);
 
-    Q = eye(n_states) * 10;
-    Q(1,1)=100;
+    Q = eye(n_states) * 1;
+    Q(1,1)=200;
     Q(3,3)=100;
     R = 0.01;
 
@@ -129,16 +129,16 @@ function u_next = iLQR_function(istate, state_d, it)
 
         end
 
-        disp("iter")
-        disp(iteration)
-        disp("l")
-        disp(l')
-        disp("L")
-        disp(L')
-        disp("S")
-        disp(S')
-        disp("s")
-        disp(s')
+        % disp("iter")
+        % disp(iteration)
+        % disp("l")
+        % disp(l')
+        % disp("L")
+        % disp(L')
+        % disp("S")
+        % disp(S')
+        % disp("s")
+        % disp(s')
 
         %forward iteration
         for n = 1:horizon_disc
@@ -169,13 +169,13 @@ function u_next = iLQR_function(istate, state_d, it)
         defects = state_array(:, 1:horizon_disc) - state_d(:, 1:horizon_disc);
         %defects(1:end-1)=0;
         disp("istate")
-        disp(istate')
+        disp(istate)
         disp("state array")
-        disp(state_array')
+        disp(state_array(:,:))
         disp("state_d traj")
-        disp(state_d(1:horizon_disc)')
+        disp(state_d(:,1:horizon_disc))
         disp("defects")
-        disp(defects(:)')
+        disp(defects(:,:))
         disp("control")
         disp(u')
         plot(time_array, state_array)
