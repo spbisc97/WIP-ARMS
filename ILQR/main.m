@@ -10,7 +10,7 @@ end
 
 y=[1; 0; pi; 0]; %initial point
 t=0.01;%initial time
-tf=1;%final time
+tf=3;%final time
 dt=0.01;%increasing time %time step
 
 time=t:dt:tf; %time array

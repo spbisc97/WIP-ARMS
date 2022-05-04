@@ -15,13 +15,13 @@ function u_next = iLQR_function(istate, state_d, it)
 
     [n_states, sz] = size(state_d);
 
-    Q = eye(n_states) * 1;
-    Q(1,1)=200;
-    Q(3,3)=100;
+    Q = eye(n_states) * 20;
+    Q(1,1)=70;
+    Q(3,3)=200;
     R = 0.01;
 
-    iterations = 10;
-    horizon = 0.2; %time S
+    iterations = 100;
+    horizon = 3; %time S
     horizon_disc = floor(horizon / dt);
 
     if horizon_disc > sz
