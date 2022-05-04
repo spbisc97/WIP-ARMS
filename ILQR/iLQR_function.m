@@ -20,7 +20,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     Q = eye(n_states) * 20;
     Q(1,1)=70;
     Q(3,3)=200;
-    R = 0.01;
+    R = 0.001;
 
     iterations = 100;
     cost=0;
@@ -45,10 +45,11 @@ function next_single_control = iLQR_function(istate, state_d, it)
         [usz, ~] = size(u);
         u = [0; u];
         u = [u(3:end); zeros(horizon_disc - usz + 1, 1)];
-        next_u=u;
+        
     else
         u = ones(horizon_disc, 1) * (0);
     end
+    next_u=u;
 
     state_array = [];
     control_array = [];
@@ -155,6 +156,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
             delta_u = l(:, n) + L(:, N) * defects(:, n);
             next_u(n) = u(n) + delta_u;
             if (isnan(next_u(n)))
+                u=0;
                 return
             end
         end
