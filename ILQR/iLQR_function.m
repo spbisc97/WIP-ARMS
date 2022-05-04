@@ -1,4 +1,4 @@
-function u_next = iLQR_function(istate, state_d, it)
+function next_single_control = iLQR_function(istate, state_d, it)
     
     % [~, sz] = size(state_d) ;
     
@@ -6,7 +6,7 @@ function u_next = iLQR_function(istate, state_d, it)
     
     % disp(state_d)
     global u
-    u_next = 0;
+    next_single_control = 0;
 
     dt = 0.01;
     t = it;
@@ -155,7 +155,7 @@ function u_next = iLQR_function(istate, state_d, it)
             delta_u = l(:, n) + L(:, N) * defects(:, n);
             next_u(n) = u(n) + delta_u;
             if (isnan(next_u(n)))
-                exit()
+                return
             end
         end
 
@@ -213,13 +213,13 @@ function u_next = iLQR_function(istate, state_d, it)
 
 
 
-        u=u_next;
+        u=next_u;
 
     end
 
     % disp("next control")
     % disp(u(1))
-    u_next = u(1);
+    next_single_control = u(1);
     %save('ilqrVars.mat') % save variables to
 
 end
