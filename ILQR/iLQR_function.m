@@ -17,8 +17,8 @@ Q = 10;
 R = 0.01;
 
 
-iterations=50;
-horizon=0.04; %time S
+iterations=20;
+horizon=0.1; %time S
 horizon_disc=floor(horizon/dt);
 if horizon_disc>sz
     horizon=sz*dt;
