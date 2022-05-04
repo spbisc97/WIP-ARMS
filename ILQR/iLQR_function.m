@@ -37,6 +37,7 @@ function u_next = iLQR_function(istate, state_d, it)
         [usz, ~] = size(u);
         u = [0; u];
         u = [u(3:end); zeros(horizon_disc - usz + 1, 1)];
+        next_u=u;
     else
         u = ones(horizon_disc, 1) * (0);
     end
@@ -144,7 +145,10 @@ function u_next = iLQR_function(istate, state_d, it)
         for n = 1:horizon_disc
             %compute delta_u and update the value
             delta_u = l(:, n) + L(:, N) * defects(:, n);
-            u(n) = u(n) + delta_u;
+            next_u(n) = u(n) + delta_u;
+            if (isnan(next_u(n)))
+                exit()
+            end
         end
 
         t = it;
@@ -156,7 +160,7 @@ function u_next = iLQR_function(istate, state_d, it)
         while t < it + horizon
             %compute the forward dynamics to define the defects
             elem = floor((t - it + dt) / dt);
-            dy = ForwardDynamics(state, u(elem));
+            dy = ForwardDynamics(state, next_u(elem));
             state = euler_integration_fun(state, dy, dt);
             control_array = [control_array, u(elem)];
             time_array = [time_array, t];
@@ -181,6 +185,8 @@ function u_next = iLQR_function(istate, state_d, it)
         plot(time_array, state_array)
         legend("x","dx","phi","dphi")
         pause(0.1)
+
+        u=u_next;
 
     end
 
