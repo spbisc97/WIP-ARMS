@@ -8,14 +8,14 @@ if (wclose)
 end
 
 
-y=[0; 0; 0; pi]; %initial point
+y=[1; 0; pi; 0]; %initial point
 t=0.01;%initial time
-tf=3;%final time
+tf=1;%final time
 dt=0.01;%increasing time %time step
 
 time=t:dt:tf; %time array
 %traj_d=-0.06*(time-1.7).^5+0.6; %desired trajectory 
-traj_d=repmat([0; 0; 0; pi], [1,tf/dt]);
+traj_d=repmat([0; 0; pi; 0], [1,tf/dt]);
 state_array=[]; %array degli stati
 control_array=[]; %array del controllo 
 time_array=[]; %array del tempo (dovrebbe coincidere con la l'array "time")
@@ -23,8 +23,8 @@ y_d_array=[];%array della traiettoria (dovrebbe coincidere con la l'array "traj_
 while t<tf %process start
 
     %find u control
-    y_des=traj_d(floor(t/dt));
-    u=iLQR_function(y,traj_d(floor(t/dt):end),t);
+    y_des=traj_d(:,floor(t/dt));
+    u=iLQR_function(y,traj_d(:,floor(t/dt):end),t);
     %u=LQR_function(y,y_des,Q,R);   
     %save to plot
     control_array = [control_array,u];

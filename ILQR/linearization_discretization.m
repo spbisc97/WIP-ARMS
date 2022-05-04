@@ -1,9 +1,9 @@
 function [A, B] = linearization_discretization(u, state)
     y = state;
-    y1 = y(1);
-    y2 = y(2);
-    y3 = y(3);
-    y4 = y(4);
+    y1 = y(1); %posizione x
+    y2 = y(2); %velocità x
+    y3 = y(3); %angolo phi
+    y4 = y(4); %velocità angolare phi
     Ts = 0.01;
     m = 1;
     M = 5;

@@ -1,6 +1,9 @@
 function u_next = iLQR_function(istate, state_d, it)
-    [~, sz] = size(state_d) ;
-    state_d = reshape(state_d, 4, sz/4);
+    
+    % [~, sz] = size(state_d) ;
+    
+    % state_d = reshape(state_d, 4, sz/4);
+    
     % disp(state_d)
     global u
     dt = 0.01;
@@ -10,13 +13,15 @@ function u_next = iLQR_function(istate, state_d, it)
 
     %pause
 
-    [n_states, sz] = size(state_d)
+    [n_states, sz] = size(state_d);
 
     Q = eye(n_states) * 10;
+    Q(1,1)=100;
+    Q(3,3)=100;
     R = 0.01;
 
-    iterations = 20;
-    horizon = 0.1; %time S
+    iterations = 10;
+    horizon = 0.2; %time S
     horizon_disc = floor(horizon / dt);
 
     if horizon_disc > sz
@@ -25,8 +30,6 @@ function u_next = iLQR_function(istate, state_d, it)
     end
 
     S = repmat(Q, 1, horizon_disc + 1);
-    disp("S")
-    disp(S)
     L = zeros(1, horizon_disc * n_states); %size depends both from the number of controls and states
     l = zeros(1, horizon_disc); % size depends from the number of controls
 
@@ -75,7 +78,7 @@ function u_next = iLQR_function(istate, state_d, it)
     % defects(1:end-1)=0;
     %disp("defects")
     %disp(defects(:)')
-    s = zeros(n_states, horizon_disc + 1) %deep horizon+1 and hight is n_states
+    s = zeros(n_states, horizon_disc + 1); %deep horizon+1 and hight is n_states
     s(:, horizon_disc + 1) = Q * state_array(:, horizon_disc); %TBC
 
     %start the optimizing iterations
@@ -92,10 +95,10 @@ function u_next = iLQR_function(istate, state_d, it)
 
         %backword iteration
         for step = 1:horizon_disc %horizon_disc-1 times
-            n = horizon_disc - step + 1;
-            N = (1 + 4 * (n - 1)):(4 * (n));
-            A = A_(n);
-            B = B_(n);
+            n = horizon_disc - step + 1; 
+            N = (4*n-3):(4*n); %Prendere elemento da n*4-3 a elemento n*4
+            A = A_(:,N);
+            B = B_(:,n);
 
             %compute r,h,G,H to simplify S and s computations
             P = 0;%repmat([0], [1, n_states]); %set mixed weight to zero delta_u*P*delta_x
@@ -103,12 +106,12 @@ function u_next = iLQR_function(istate, state_d, it)
             h = r + B.' * (s(:,n + 1) + S(:,N + 4) * defects(:, n));
             G = P + B.' *  S(:,N + 4) * A;
             H = R + B.' *  S(:,N + 4) * B;
-            disp(["H"])
-            disp([H])
-            disp("G")
-            disp([G])
-            disp("h")
-            disp([h])
+            % disp(["H"])
+            % disp([H])
+            % disp("G")
+            % disp([G])
+            % disp("h")
+            % disp([h])
 
 
             %compute Values to use in the forward iterations
@@ -120,7 +123,7 @@ function u_next = iLQR_function(istate, state_d, it)
             %compute next S,s Value
             S(:,N) = Q + A' * S(:,N + 4) * A - L(:, N)' * H * L(:, N);
             q = Q * defects(:, n);
-            S(:,N) = q + A' * (s( :,n + 1) + S(:,N + 4) * defects(:, n)) + G' * l(:, n) + L(:, N)' * (h + H * l(:, n));
+            s(:,n) = q + A' * (s( :,n + 1) + S(:,N + 4) * defects(:, n)) + G' * l(:, n) + L(:, N)' * (h + H * l(:, n));
             %disp(["S","s","n"])
             %disp([S(n),s(n),n])
 
@@ -155,9 +158,9 @@ function u_next = iLQR_function(istate, state_d, it)
             elem = floor((t - it + dt) / dt);
             dy = ForwardDynamics(state, u(elem));
             state = euler_integration_fun(state, dy, dt);
-            control_array = [control_array; u(elem)];
-            time_array = [time_array; t];
-            state_array = [state_array; state];
+            control_array = [control_array, u(elem)];
+            time_array = [time_array, t];
+            state_array = [state_array, state];
             t = t + dt;
         end
 
@@ -176,6 +179,7 @@ function u_next = iLQR_function(istate, state_d, it)
         disp("control")
         disp(u')
         plot(time_array, state_array)
+        legend("x","dx","phi","dphi")
         pause(0.1)
 
     end
