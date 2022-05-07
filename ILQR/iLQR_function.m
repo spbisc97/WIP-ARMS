@@ -1,9 +1,9 @@
 function next_single_control = iLQR_function(istate, state_d, it)
-    
+
     % [~, sz] = size(state_d) ;
-    
+
     % state_d = reshape(state_d, 4, sz/4);
-    
+
     % disp(state_d)
     global u
     next_single_control = 0;
@@ -17,20 +17,21 @@ function next_single_control = iLQR_function(istate, state_d, it)
 
     [n_states, sz] = size(state_d);
 
-    Q = eye(n_states) * 20;
-    Q(1,1)=70;
-    Q(3,3)=200;
-    R = 0.001;
+    Q = eye(n_states) * 1;
+    Q(1, 1) = 10;
+    Q(3, 3) = 10;
+    R = 10;
 
     iterations = 100;
-    cost=0;
-    new_cost=0;
-    j_rm=0.002;
-    defects_max=ones(n_states,1);
-    defects_max(2,1)=20;
-    defects_max(4,1)=20;
-    horizon = 3; %time S
+    cost = 0;
+    new_cost = 0;
+    j_rm = 0.00;
+
+    horizon = 1; %time S
     horizon_disc = floor(horizon / dt);
+    defects_max = ones(n_states, 1) * horizon_disc;
+    defects_max(2, 1) = 20;
+    defects_max(4, 1) = 20;
 
     if horizon_disc > sz
         horizon = sz * dt;
@@ -45,11 +46,11 @@ function next_single_control = iLQR_function(istate, state_d, it)
         [usz, ~] = size(u);
         u = [0; u];
         u = [u(3:end); zeros(horizon_disc - usz + 1, 1)];
-        
+
     else
         u = ones(horizon_disc, 1) * (0);
     end
-    next_u=u;
+    next_u = u;
 
     state_array = [];
     control_array = [];
@@ -73,6 +74,9 @@ function next_single_control = iLQR_function(istate, state_d, it)
         t = t + dt;
     end
 
+    %plot(time_array, state_array)
+    %legend("x","dx","phi","dphi")
+    %pause
     % disp("istate")
     % disp(state')
     % disp("state array")
@@ -99,30 +103,30 @@ function next_single_control = iLQR_function(istate, state_d, it)
         B_ = [];
         %compute the linearized dynamics
         for step = 1:horizon_disc
-            Step=(4*(step-1)+1):(4*(step));
-            [A_(:,Step), B_(:,step)] = linearization_discretization(u(step), state_array(:,step));
+            Step = (4 * (step - 1) + 1):(4 * (step));
+            [A_(:, Step), B_(:, step)] = linearization_discretization(u(step), state_array(:, step));
+
         end
 
         %backword iteration
         for step = 1:horizon_disc %horizon_disc-1 times
-            n = horizon_disc - step + 1; 
-            N = (4*n-3):(4*n); %Prendere elemento da n*4-3 a elemento n*4
-            A = A_(:,N);
-            B = B_(:,n);
+            n = horizon_disc - step + 1;
+            N = (4 * n - 3):(4 * n); %Prendere elemento da n*4-3 a elemento n*4
+            A = A_(:, N);
+            B = B_(:, n);
 
             %compute r,h,G,H to simplify S and s computations
-            P = 0;%repmat([0], [1, n_states]); %set mixed weight to zero delta_u*P*delta_x
+            P = 0; %repmat([0], [1, n_states]); %set mixed weight to zero delta_u*P*delta_x
             r = R * u(n); %should be the derivative of uRu
-            h = r + B.' * (s(:,n + 1) + S(:,N + 4) * defects(:, n));
-            G = P + B.' *  S(:,N + 4) * A;
-            H = R + B.' *  S(:,N + 4) * B;
+            h = r + B.' * (s(:, n + 1) + S(:, N + 4) * defects(:, n));
+            G = P + B.' * S(:, N + 4) * A;
+            H = R + B.' * S(:, N + 4) * B;
             % disp(["H"])
             % disp([H])
             % disp("G")
             % disp([G])
             % disp("h")
             % disp([h])
-
 
             %compute Values to use in the forward iterations
             L(:, N) = -pinv(H) * G;
@@ -131,9 +135,9 @@ function next_single_control = iLQR_function(istate, state_d, it)
             %disp([L(n),l(n),n])
 
             %compute next S,s Value
-            S(:,N) = Q + A' * S(:,N + 4) * A - L(:, N)' * H * L(:, N);
+            S(:, N) = Q + A' * S(:, N + 4) * A - L(:, N)' * H * L(:, N);
             q = Q * defects(:, n);
-            s(:,n) = q + A' * (s( :,n + 1) + S(:,N + 4) * defects(:, n)) + G' * l(:, n) + L(:, N)' * (h + H * l(:, n));
+            s(:, n) = q + A' * (s(:, n + 1) + S(:, N + 4) * defects(:, n)) + G' * l(:, n) + L(:, N)' * (h + H * l(:, n));
             %disp(["S","s","n"])
             %disp([S(n),s(n),n])
 
@@ -156,8 +160,12 @@ function next_single_control = iLQR_function(istate, state_d, it)
             delta_u = l(:, n) + L(:, N) * defects(:, n);
             next_u(n) = u(n) + delta_u;
             if (isnan(next_u(n)))
-                u=0;
+                disp(iteration)
+                disp("isnan")
+                pause
+                u = u * 0;
                 return
+                %continue
             end
         end
 
@@ -185,41 +193,35 @@ function next_single_control = iLQR_function(istate, state_d, it)
         disp("istate")
         disp(istate)
         disp("state array")
-        disp(state_array(:,:))
+        disp(state_array(:, :))
         disp("state_d traj")
-        disp(state_d(:,1:horizon_disc))
+        disp(state_d(:, 1:horizon_disc))
         disp("defects")
-        disp(defects(:,:))
+        disp(defects(:, :))
         disp("control")
         disp(u')
         plot(time_array, state_array)
-        legend("x","dx","phi","dphi")
+        legend("x", "dx", "phi", "dphi")
 
-        new_cost=0;
-        for i=1:horizon_disc
-            new_cost=new_cost+defects(:,i)'*Q*defects(:,i)+control_array(:,i)'*R*control_array(:,i);
+        new_cost = 0;
+        for i = 1:horizon_disc
+            new_cost = new_cost + defects(:, i)' * Q * defects(:, i) + control_array(:, i)' * R * control_array(:, i);
         end
         disp("new_cost")
         disp(new_cost)
-        pause(0.1)
-            %check cost increments and return if solved
-            
-        if((abs(new_cost-cost)/new_cost < j_rm) && sum(sum(abs(defects'))'<defects_max))
+        pause(0.01)
+        %check cost increments and return if solved
+
+        if ((abs(new_cost - cost) / new_cost < j_rm)) %&& all(sum(abs(defects'))'<defects_max))
             return
         end
-        
-        cost=new_cost;
 
-        
+        cost = new_cost;
 
-
-
-
-        u=next_u;
+        u = next_u;
 
     end
 
-    % disp("next control")
     % disp(u(1))
     next_single_control = u(1);
     %save('ilqrVars.mat') % save variables to
