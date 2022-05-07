@@ -1,5 +1,4 @@
 function new_state = euler_integration_fun(state, dy, dt)
-    size(state)
     %integrate as euler
     %%test with single value
     %new_state=state+dy*dt;
