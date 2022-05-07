@@ -203,8 +203,13 @@ function next_single_control = iLQR_function(istate, state_d, it)
         disp(defects(:, :))
         disp("control")
         disp(u')
-        plot(time_array, state_array)
-        legend("x", "dx", "phi", "dphi")
+        tiledlayout(2,1);
+        nexttile
+        plot(time_array,[state_array(1,:);state_array(3,:)])
+        legend("x", "phi")
+        nexttile
+        plot(time_array, [state_array(2,:); state_array(4,:)])
+        legend("dx", "dphi")
 
         new_cost = 0;
         
