@@ -6,9 +6,11 @@ end
 if (wclose)
     close all
 end
+clc; clear;
 
 
-y=[1; 0; pi; 0]; %initial point
+
+y=[0; 0; pi-0.1; 0]; %initial point
 t=0.01;%initial time
 tf=3;%final time
 dt=0.01;%increasing time %time step
