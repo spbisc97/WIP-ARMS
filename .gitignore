@@ -1,4 +1,4 @@
 *.asv
 *.xopp
-
+.DS_Store
 *.mat
