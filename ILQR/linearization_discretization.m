@@ -26,6 +26,6 @@ function [A, B] = linearization_discretization(u, state)
         - cos(y3) / (L * (M - m * (cos(y3)^2 - 1)))];
     n=4;
     B = pinv(eye(n) - A * Ts / 2.) * B * sqrt(Ts);
-    A = (eye(n) + A * Ts / 2.) * pinv(eye(n) - A * Ts / 2.);
+    A = (eye(n) + A * Ts / 2.) * pinv(eye(n) - A * Ts / 2.);%tustin, bilinear trans
 
 end
