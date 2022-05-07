@@ -6,11 +6,11 @@ end
 if (wclose)
     close all
 end
-clc; clear;
+clc; 
 
 
 
-y=[0; 0; pi-0.1; 0]; %initial point
+y=[1; 0; pi; 0]; %initial point
 t=0.01;%initial time
 tf=3;%final time
 dt=0.01;%increasing time %time step
@@ -26,8 +26,8 @@ while t<tf %process start
 
     %find u control
     y_des=traj_d(:,floor(t/dt));
-    u=iLQR_function(y,traj_d(:,floor(t/dt):end),t);
-    %u=LQR_function(y,y_des,Q,R);   
+    %u=iLQR_function(y,traj_d(:,floor(t/dt):end),t);
+    u=LQR_function(y,y_des,Q,R);   
     %save to plot
     control_array = [control_array,u];
     time_array=[time_array,t];
@@ -46,9 +46,11 @@ nexttile
 plot(time_array,state_array)
 hold on
 plot(time_array,y_d_array)
+legend("x", "dx", "phi", "dphi","d-x", "d-dx", "d-phi", "d-dphi")
 title("trajectory and desired trajectory")
 nexttile
 plot(time_array,y_d_array-state_array)
+legend("x", "dx", "phi", "dphi")
 title("error trajectory")
 nexttile
 plot(time_array,control_array)
