@@ -17,21 +17,22 @@ function next_single_control = iLQR_function(istate, state_d, it)
 
     [n_states, sz] = size(state_d);
 
-    Q = eye(n_states) * 1;
+    Q = eye(n_states) * 2;
     Q(1, 1) = 10;
-    Q(3, 3) = 10;
-    R = 10;
+    Q(3, 3) = 100;
+    R = 0.0001;
 
-    iterations = 100;
+    iterations = 10000;
     cost = 0;
     new_cost = 0;
-    j_rm = 0.00;
+    j_rm = 0.002;
 
-    horizon = 1; %time S
+    horizon = 0.9; %time S
     horizon_disc = floor(horizon / dt);
-    defects_max = ones(n_states, 1) * horizon_disc;
-    defects_max(2, 1) = 20;
-    defects_max(4, 1) = 20;
+    defects_max = ones(n_states, 1) * 0.3;
+    defects_max(1, 1) = 0.5;
+    defects_max(2, 1) = 30;
+    defects_max(4, 1) = 30;
 
     if horizon_disc > sz
         horizon = sz * dt;
@@ -46,10 +47,10 @@ function next_single_control = iLQR_function(istate, state_d, it)
         [usz, ~] = size(u);
         u = [0; u];
         u = [u(3:end); zeros(horizon_disc - usz + 1, 1)];
-
     else
         u = ones(horizon_disc, 1) * (0);
     end
+
     next_u = u;
 
     state_array = [];
@@ -89,11 +90,11 @@ function next_single_control = iLQR_function(istate, state_d, it)
     %defects=distance between state array and desired state
     %(traj and desired trajectory)
     defects = state_array(:, 1:horizon_disc) - state_d(:, 1:horizon_disc);
-    % defects(1:end-1)=0;
+    defects(:,1:end-1)=0;
     %disp("defects")
     %disp(defects(:)')
     s = zeros(n_states, horizon_disc + 1); %deep horizon+1 and hight is n_states
-    s(:, horizon_disc + 1) = Q * state_array(:, horizon_disc); %TBC
+    s(:, horizon_disc + 1) = Q * defects(:, horizon_disc); %TBC % check if it is Q*defect(horizon disc)
 
     %start the optimizing iterations
     for iteration = 1:iterations - 1
@@ -103,9 +104,10 @@ function next_single_control = iLQR_function(istate, state_d, it)
         B_ = [];
         %compute the linearized dynamics
         for step = 1:horizon_disc
-            Step = (4 * (step - 1) + 1):(4 * (step));
+            Step = (4 * step - 3):(4 * step);
             [A_(:, Step), B_(:, step)] = linearization_discretization(u(step), state_array(:, step));
-
+            %A_=[A_,A]
+            %B_=[B_,B]
         end
 
         %backword iteration
@@ -127,7 +129,6 @@ function next_single_control = iLQR_function(istate, state_d, it)
             % disp([G])
             % disp("h")
             % disp([h])
-
             %compute Values to use in the forward iterations
             L(:, N) = -pinv(H) * G;
             l(:, n) = -pinv(H) * h;
@@ -159,6 +160,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
             %compute delta_u and update the value
             delta_u = l(:, n) + L(:, N) * defects(:, n);
             next_u(n) = u(n) + delta_u;
+
             if (isnan(next_u(n)))
                 disp(iteration)
                 disp("isnan")
@@ -167,6 +169,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
                 return
                 %continue
             end
+
         end
 
         t = it;
@@ -189,7 +192,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
         %defects=distance between state array and desired state
         %(traj and desired trajectory)
         defects = state_array(:, 1:horizon_disc) - state_d(:, 1:horizon_disc);
-        %defects(1:end-1)=0;
+        defects(:,1:end-1)=0;
         disp("istate")
         disp(istate)
         disp("state array")
@@ -204,15 +207,17 @@ function next_single_control = iLQR_function(istate, state_d, it)
         legend("x", "dx", "phi", "dphi")
 
         new_cost = 0;
+        
         for i = 1:horizon_disc
             new_cost = new_cost + defects(:, i)' * Q * defects(:, i) + control_array(:, i)' * R * control_array(:, i);
         end
+
         disp("new_cost")
         disp(new_cost)
         pause(0.01)
         %check cost increments and return if solved
 
-        if ((abs(new_cost - cost) / new_cost < j_rm)) %&& all(sum(abs(defects'))'<defects_max))
+        if (((abs(new_cost - cost) / new_cost < j_rm)) && all(sum(abs(defects'))'<defects_max))
             return
         end
 
