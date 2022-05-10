@@ -158,6 +158,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
         %forward iteration
         for n = 1:horizon_disc
             %compute delta_u and update the value
+            N = (4 * n - 3):(4 * n); %Prendere elemento da n*4-3 a elemento n*4
             delta_u = l(:, n) + L(:, N) * defects(:, n);
             next_u(n) = u(n) + delta_u;
 
