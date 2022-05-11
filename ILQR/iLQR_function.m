@@ -90,7 +90,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     %defects=distance between state array and desired state
     %(traj and desired trajectory)
     defects = state_array(:, 1:horizon_disc) - state_d(:, 1:horizon_disc);
-    defects(:,1:end-1)=0;
+    defects(:, 1:end - 1) = 0;
     %disp("defects")
     %disp(defects(:)')
     s = zeros(n_states, horizon_disc + 1); %deep horizon+1 and hight is n_states
@@ -193,7 +193,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
         %defects=distance between state array and desired state
         %(traj and desired trajectory)
         defects = state_array(:, 1:horizon_disc) - state_d(:, 1:horizon_disc);
-        defects(:,1:end-1)=0;
+        defects(:, 1:end - 1) = 0;
         disp("istate")
         disp(istate)
         disp("state array")
@@ -204,37 +204,41 @@ function next_single_control = iLQR_function(istate, state_d, it)
         disp(defects(:, :))
         disp("control")
         disp(u')
-        tiledlayout(2,1);
+        tiledlayout(2, 1);
         nexttile
-        plot(time_array,[state_array(1,:);state_array(3,:)])
+        plot(time_array, [state_array(1, :); state_array(3, :)])
         legend("x", "phi")
         nexttile
-        plot(time_array, [state_array(2,:); state_array(4,:)])
+        plot(time_array, [state_array(2, :); state_array(4, :)])
         legend("dx", "dphi")
 
         new_cost = 0;
-        
+
         for i = 1:horizon_disc
             new_cost = new_cost + defects(:, i)' * Q * defects(:, i) + control_array(:, i)' * R * control_array(:, i);
         end
 
         disp("new_cost")
         disp(new_cost)
+
+        relative = abs(new_cost - cost) / new_cost;
+        disp("relative")
+        disp(relative)
+
         pause(0.01)
+        u = next_u;
+        next_single_control = u(1);
         %check cost increments and return if solved
 
-        if (((abs(new_cost - cost) / new_cost < j_rm)) && all(sum(abs(defects'))'<defects_max))
+        if (((relative < j_rm)) && all(sum(abs(defects'))' < defects_max))
             return
         end
 
         cost = new_cost;
 
-        u = next_u;
-
     end
 
     % disp(u(1))
-    next_single_control = u(1);
     %save('ilqrVars.mat') % save variables to
 
 end

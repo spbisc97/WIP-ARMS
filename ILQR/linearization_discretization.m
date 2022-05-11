@@ -1,6 +1,9 @@
-function [A, B] = linearization_discretization(u, state)
+function [A, B] = linearization_discretization(u, state, discrete)
+    if nargin < 3
+        discrete = 0;
+    end
     y = state;
-    %y=[0 0 pi 0];u=0;% choose linearization point different from state
+    %y = [0 0 pi 0]; u = 0; % choose linearization point different from state
     y1 = y(1); %posizione x
     y2 = y(2); %velocità x
     y3 = y(3); %angolo phi
@@ -24,10 +27,14 @@ function [A, B] = linearization_discretization(u, state)
         1 / (M - m * (cos(y3)^2 - 1))
         0
         - cos(y3) / (L * (M - m * (cos(y3)^2 - 1)))];
-    n=4;
-    Ad = (eye(n) + A * Ts / 2.) * pinv(eye(n) - A * Ts / 2.);%tustin, bilinear trans
-    B = pinv(eye(n) - A * Ts / 2.) * B * sqrt(Ts);
-    %Bd = pinv(A)*(Ad-eye(n))*B;
-    A=Ad;
-    %B=Bd;
+
+    if discrete == 1;
+        n = 4;
+        Ad = (eye(n) + A * Ts / 2.) * pinv(eye(n) - A * Ts / 2.); %tustin, bilinear trans
+        B = pinv(eye(n) - A * Ts / 2.) * B * sqrt(Ts);
+        Bd = pinv(A) * (Ad - eye(n)) * B;
+        A = Ad;
+        B = Bd;
+    end
+
 end
