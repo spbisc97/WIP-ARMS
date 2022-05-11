@@ -5,7 +5,7 @@ function u = LQR_function(state, state_d, Q, R)
     horizon = 200000000;%montepremi superenalotto 7/05/22
     P = Q;
 
-    [A, B] = linearization_discretization(u, state); %linearizziamo il sistema nel punto
+    [A, B] = linearization_discretization(u, state,1); %linearizziamo il sistema nel punto
 
     for step = 1:horizon
         P_next = A' * P * A - (A' * P * B) * pinv(R + B' * P * B) * (B' * P * A) + Q; %discrete ARE solution
