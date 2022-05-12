@@ -3,6 +3,12 @@ function main(Q, R, wclose)
     if nargin < 3
         wclose = 0;
     end
+    if nargin < 2
+        R=0.0001
+    end
+    if nargin <1
+        Q=diag([10,1,100,1])
+    end
 
     if (wclose)
         close all
