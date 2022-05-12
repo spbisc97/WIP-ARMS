@@ -1,20 +1,9 @@
 function next_single_control = iLQR_function(istate, state_d, it)
-
-    % [~, sz] = size(state_d) ;
-
-    % state_d = reshape(state_d, 4, sz/4);
-
-    % disp(state_d)
-    global u
-    next_single_control = 0;
-
-    dt = 0.01;
-    t = it;
-    state = istate;
-    %disp("ilqr")
-
-    %pause
-
+    global u %use global u to remember last optimized values
+    next_single_control = 0; %default next control if we have a nan value
+    dt = 0.01; %delta t for integration
+    t = it; %inital t
+    state = istate; %inital state
     [n_states, sz] = size(state_d);
 
     Q = eye(n_states) * 0.1;
@@ -27,7 +16,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     new_cost = 0;
     j_rm = 0.1;
 
-    horizon = 0.3 ; %time S
+    horizon = 0.3; %time S
     horizon_disc = floor(horizon / dt);
     defects_max = ones(n_states, 1) * 0.3;
     defects_max(1, 1) = 0.2;
@@ -72,7 +61,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
         t = t + dt;
         control_array = [control_array, u(elem)];
         time_array = [time_array, t];
-        state_array = [state_array, state];   
+        state_array = [state_array, state];
     end
 
     %plot(time_array, state_array)
@@ -103,7 +92,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
         A_ = [];
         B_ = [];
         %compute the linearized dynamics
-        for step = 1:horizon_disc-1
+        for step = 1:horizon_disc - 1
             Step = (4 * step - 3):(4 * step);
             [A_(:, Step), B_(:, step)] = linearization_discretization(u(step), state_array(:, step));
             %A_=[A_,A]
@@ -111,7 +100,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
         end
 
         %backword iteration
-        for step = 1:(horizon_disc-1) %horizon_disc-1 times
+        for step = 1:(horizon_disc - 1) %horizon_disc-1 times
             n = horizon_disc - step;
             N = (4 * n - 3):(4 * n); %Prendere elemento da n*4-3 a elemento n*4
             A = A_(:, N);
@@ -154,19 +143,22 @@ function next_single_control = iLQR_function(istate, state_d, it)
         % disp(S')
         % disp("s")
         % disp(s')
-        new_state_array=[istate];
+        new_state_array = [istate];
         %forward iteration
-        for n = 1:horizon_disc-1
+        for n = 1:horizon_disc - 1
             %compute delta_u and update the value
             N = (4 * n - 3):(4 * n); %Prendere elemento da n*4-3 a elemento n*4
             A = A_(:, N);
             B = B_(:, n);
 
-            delta_u = l(:, n) + L(:, N) *(new_state_array(:,n)-state_array(:,n)); %defects(:, n);
+            delta_u = l(:, n) + L(:, N) * (new_state_array(:, n) - state_array(:, n));% in this case we take the error  %defects(:, n);
             new_u(n) = u(n) + delta_u;
-            new_state=state_array(:,n+1)+(A+B*L(:,N))*(new_state_array(:,n)-state_array(:,n))...
-                                    +B*l(:,n)+defects(:,n+1);
-            new_state_array=[new_state_array,new_state];
+            new_state = state_array(:, n + 1) ... % take the previous value
+                + (A + B * L(:, N)) * (new_state_array(:, n) - state_array(:, n)) ... %like A+Bu
+                +B * l(:, n)% + defects(:, n + 1);
+
+            new_state_array = [new_state_array, new_state];
+
             if (isnan(new_u(n)))
                 disp(iteration)
                 disp("isnan")
@@ -193,7 +185,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
             control_array = [control_array, u(elem)];
             time_array = [time_array, t];
             state_array = [state_array, state];
-            
+
         end
 
         %defects=distance between state array and desired state
@@ -210,20 +202,21 @@ function next_single_control = iLQR_function(istate, state_d, it)
         disp(defects(:, :))
         disp("control")
         disp(u')
-        tiledlayout(2,1);
+        tiledlayout(2, 1);
         nexttile
-        plot(time_array,[state_array(1,:);state_array(3,:)])
+        plot(time_array, [state_array(1, :); state_array(3, :)])
         legend("x", "phi")
         nexttile
-        plot(time_array, [state_array(2,:); state_array(4,:)])
+        plot(time_array, [state_array(2, :); state_array(4, :)])
         legend("dx", "dphi")
 
         new_cost = 0;
-        
-        for i = 1:horizon_disc-1
-            new_cost = new_cost + defects(:, i+1)' * Q * defects(:, i+1) + control_array(:, i)' * R * control_array(:, i);
+
+        for i = 1:horizon_disc - 1
+            new_cost = new_cost + defects(:, i + 1)' * Q * defects(:, i + 1) + control_array(:, i)' * R * control_array(:, i);
         end
-        relative=abs(new_cost - cost) / new_cost;
+
+        relative = abs(new_cost - cost) / new_cost;
         disp('new_cost')
         disp(new_cost)
         disp('relative')
@@ -235,32 +228,16 @@ function next_single_control = iLQR_function(istate, state_d, it)
 
         %check cost increments and return if solved
 
-        if (((relative < j_rm)) && all((abs(defects(:,horizon_disc)'))'<defects_max))
-            
+        if (((relative < j_rm)) && all((abs(defects(:, horizon_disc)'))' < defects_max))
+
             return
         end
 
         cost = new_cost;
 
-        
-
     end
 
-    % disp(u(1))
-    
     %save('ilqrVars.mat') % save variables to
-
 end
 
-function dispvar()
-    myvals = whos;
 
-    for n = 1:length(myvals)
-
-        if isnan(myvals(n).name)
-            eval(myvals(n).name)
-        end
-
-    end
-
-end
