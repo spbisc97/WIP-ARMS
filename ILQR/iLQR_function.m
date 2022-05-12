@@ -7,21 +7,22 @@ function next_single_control = iLQR_function(istate, state_d, it)
     [n_states, sz] = size(state_d);
 
     Q = eye(n_states) * 1;
-    Q(1, 1) = 10;
-    Q(3, 3) = 10;
-    R = 0.001;
+    Q(1, 1) = 40;
+    Q(3, 3) = 100;
+    R = 0.0001;
 
     iterations = 10000;
     cost = 0;
     new_cost = 0;
-    j_rm = 0.001;
+    j_rm = 0.01;
 
     horizon = 0.6; %time S
     horizon_disc = floor(horizon / dt);
-    defects_max = ones(n_states, 1) * 0.3;
-    defects_max(1, 1) = 0.2;
-    defects_max(2, 1) = 30;
-    defects_max(4, 1) = 30;
+    defects_max = ones(n_states, 1) * 0.5;
+    defects_max(1, 1) = 0.6;
+    defects_max(1, 1) = 0.6;
+    defects_max(2, 1) = 40;
+    defects_max(4, 1) = 40;
 
     if horizon_disc > (sz-1)
         horizon = (sz-1) * dt;
@@ -222,8 +223,8 @@ function next_single_control = iLQR_function(istate, state_d, it)
         next_single_control = u(1);
 
         %check cost increments and return if solved
-
-        if (((relative < j_rm)))% && all((abs(defects(:, horizon_disc)'))' < defects_max))
+        if (((relative < j_rm)))
+        %if (((relative < j_rm)) && all((abs(defects(:, horizon_disc)'))' < defects_max))
 
             return
         end
