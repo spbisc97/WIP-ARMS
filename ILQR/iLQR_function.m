@@ -6,10 +6,10 @@ function next_single_control = iLQR_function(istate, state_d, it)
     state = istate; %inital state
     [n_states, sz] = size(state_d);
 
-    Q = eye(n_states) * 0.1;
-    Q(1, 1) = 30;
+    Q = eye(n_states) * 1;
+    Q(1, 1) = 100;
     Q(3, 3) = 10;
-    R = 0.0001;
+    R = 0.001;
 
     iterations = 10000;
     cost = 0;
@@ -45,13 +45,6 @@ function next_single_control = iLQR_function(istate, state_d, it)
     state_array = [istate];
     control_array = [];
     time_array = [it];
-
-    % myvals=whos;
-    % for n = 1:length(myvals)
-    %     if isnan(myvals(n).name)
-    %       eval(myvals(n).name)
-    %     end
-    % end
 
     while t < it + horizon - dt
         %compute the forward dynamics to define the defects
@@ -150,19 +143,21 @@ function next_single_control = iLQR_function(istate, state_d, it)
             N = (4 * n - 3):(4 * n); %Prendere elemento da n*4-3 a elemento n*4
             A = A_(:, N);
             B = B_(:, n);
-
+          
             delta_u = l(:, n) + L(:, N) * (new_state_array(:, n) - state_array(:, n));% in this case we take the error  %defects(:, n);
             new_u(n) = u(n) + delta_u;
-            new_state = state_array(:, n + 1) ... % take the previous value
-                + (A + B * L(:, N)) * (new_state_array(:, n) - state_array(:, n)) ... %like A+Bu
-                +B * l(:, n)% + defects(:, n + 1);
+            new_state = state_array(:, n+1) ... % take the previous value
+                + (A + B * L(:, N)) * (new_state_array(:, n) - state_array(:, n)) ... %like add the control
+                +B * l(:, n) %+ defects(:, n + 1);
+
+                
 
             new_state_array = [new_state_array, new_state];
 
             if (isnan(new_u(n)))
                 disp(iteration)
                 disp("isnan")
-                pause
+                %pause
                 u = u * 0;
                 return
                 %continue
@@ -222,7 +217,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
         disp('relative')
         disp(relative)
 
-        pause(0.5)
+        pause(0.005)
         u = new_u;
         next_single_control = u(1);
 
