@@ -7,25 +7,25 @@ function next_single_control = iLQR_function(istate, state_d, it)
     [n_states, sz] = size(state_d);
 
     Q = eye(n_states) * 1;
-    Q(1, 1) = 100;
+    Q(1, 1) = 10;
     Q(3, 3) = 10;
     R = 0.001;
 
     iterations = 10000;
     cost = 0;
     new_cost = 0;
-    j_rm = 0.1;
+    j_rm = 0.001;
 
-    horizon = 0.3; %time S
+    horizon = 0.6; %time S
     horizon_disc = floor(horizon / dt);
     defects_max = ones(n_states, 1) * 0.3;
     defects_max(1, 1) = 0.2;
     defects_max(2, 1) = 30;
     defects_max(4, 1) = 30;
 
-    if horizon_disc > sz
-        horizon = sz * dt;
-        horizon_disc = sz;
+    if horizon_disc > (sz-1)
+        horizon = (sz-1) * dt;
+        horizon_disc = (sz-1);
     end
 
     S = repmat(Q, 1, horizon_disc);
@@ -72,7 +72,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     %defects=distance between state array and desired state
     %(traj and desired trajectory)
     defects = state_array(:, 1:horizon_disc) - state_d(:, 1:horizon_disc);
-    %defects(:,1:end-1)=0;
+    defects(:,1:end-1)=0;
     %disp("defects")
     %disp(defects(:)')
     s = zeros(n_states, horizon_disc); %deep horizon+1 and hight is n_states
@@ -148,7 +148,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
             new_u(n) = u(n) + delta_u;
             new_state = state_array(:, n+1) ... % take the previous value
                 + (A + B * L(:, N)) * (new_state_array(:, n) - state_array(:, n)) ... %like add the control
-                +B * l(:, n) %+ defects(:, n + 1);
+                +B * l(:, n) + defects(:, n + 1);
 
                 
 
@@ -186,7 +186,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
         %defects=distance between state array and desired state
         %(traj and desired trajectory)
         defects = state_array(:, 1:horizon_disc) - state_d(:, 1:horizon_disc);
-        %defects(:,1:end-1)=0;
+        defects(:,1:end-1)=0;
         disp("istate")
         disp(istate)
         disp("state array")
@@ -223,7 +223,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
 
         %check cost increments and return if solved
 
-        if (((relative < j_rm)) && all((abs(defects(:, horizon_disc)'))' < defects_max))
+        if (((relative < j_rm)))% && all((abs(defects(:, horizon_disc)'))' < defects_max))
 
             return
         end
