@@ -103,9 +103,9 @@ function next_single_control = iLQR_function(istate, state_d, it)
             %compute r,h,G,H to simplify S and s computations
             P = 0; %repmat([0], [1, n_states]); %set mixed weight to zero delta_u*P*delta_x
             r = R * u(n); %should be the derivative of uRu
-            h = r + B.' * (s(:, n + 1) + S(:, N + 4) * defects(:, n));
-            G = P + B.' * S(:, N + 4) * A;
-            H = R + B.' * S(:, N + 4) * B;
+            h = r + B.' * (s(:, n + 1) + S(:, N + 4) * defects(:, n)); %gu
+            G = P + B.' * S(:, N + 4) * A;%Gux
+            H = R + B.' * S(:, N + 4) * B; %Guu
             % disp(["H"])
             % disp([H])
             % disp("G")
@@ -113,15 +113,17 @@ function next_single_control = iLQR_function(istate, state_d, it)
             % disp("h")
             % disp([h])
             %compute Values to use in the forward iterations
-            L(:, N) = -pinv(H) * G;
-            l(:, n) = -pinv(H) * h;
+            L(:, N) = -pinv(H) * G; %K
+            l(:, n) = -pinv(H) * h;%d
             %disp(["L","l","n"])
             %disp([L(n),l(n),n])
 
             %compute next S,s Value
+            %Q+AS()A is the Gxx 
             S(:, N) = Q + A' * S(:, N + 4) * A - L(:, N)' * H * L(:, N);
             q = Q * defects(:, n);
             s(:, n) = q + A' * (s(:, n + 1) + S(:, N + 4) * defects(:, n)) + G' * l(:, n) + L(:, N)' * (h + H * l(:, n));
+                        % gx                                                 %gxu*d             %  %K+gu + K Guu d
             %disp(["S","s","n"])
             %disp([S(n),s(n),n])
 
@@ -144,15 +146,16 @@ function next_single_control = iLQR_function(istate, state_d, it)
             N = (4 * n - 3):(4 * n); %Prendere elemento da n*4-3 a elemento n*4
             A = A_(:, N);
             B = B_(:, n);
-          
             delta_u = l(:, n) + L(:, N) * (new_state_array(:, n) - state_array(:, n));% in this case we take the error  %defects(:, n);
             new_u(n) = u(n) + delta_u;
+
             new_state = state_array(:, n+1) ... % take the previous value
                 + (A + B * L(:, N)) * (new_state_array(:, n) - state_array(:, n)) ... %like add the control
-                +B * l(:, n) + defects(:, n + 1);
+                +B * l(:, n) + defects(:, n+1 );
 
                 
-
+            %dy = ForwardDynamics(new_state_array(:, n), new_u(n));
+            %new_state = euler_integration_fun(new_state_array(:, n), dy, dt);
             new_state_array = [new_state_array, new_state];
 
             if (isnan(new_u(n)))

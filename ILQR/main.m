@@ -16,7 +16,7 @@ function main(Q, R, wclose)
 
     clc;
 
-    y = [0.5; 0; pi; 0]; %initial point
+    y = [0.1; 0; pi-0.1; 0]; %initial point
     t = 0.01; %initial time
     tf = 3; %final time
     dt = 0.01; %increasing time %time step
