@@ -17,15 +17,16 @@ function main(Q, R, wclose)
     end
 
     clc;
+    % global u;
     u = 0;
-    y = [0; 0; 0; 0]; %initial point
+    y = [1; 0; pi; 0]; %initial point
     t = 0.01; %initial time
-    tf = 10; %final time
+    tf = 3; %final time
     dt = 0.01; %increasing time %time step
 
     time = t:dt:tf; %time array
     %traj_d=-0.06*(time-1.7).^5+0.6; %desired trajectory
-    traj_d = repmat([1; 0; pi; 0], [1, tf / dt]);
+    traj_d = repmat([0; 0; pi; 0], [1, tf / dt]);
     %traj_d(1,:)=-0.06*(time-1.7).^5+0.6; %desired trajectory
     state_array = [y]; %array degli stati
     control_array = []; %array del controllo

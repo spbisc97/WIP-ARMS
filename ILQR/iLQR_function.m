@@ -20,7 +20,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     horizon_disc = floor(horizon / dt);
     defects_max = ones(n_states, 1) * 0.5;
     defects_max(1, 1) = 0.6;
-    defects_max(1, 1) = 0.6;
+    defects_max(3, 1) = 0.6;
     defects_max(2, 1) = 40;
     defects_max(4, 1) = 40;
 
