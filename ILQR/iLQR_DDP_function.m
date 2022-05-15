@@ -73,7 +73,7 @@ function next_single_control = iLQR_DDP_function(istate, state_d, it)
             %derivatives
             q = Q * (state_array(:, n) - state_d(:, n));
             r = R * u(n);
-            [A_(:, N), B_(:, n)] = linearization_discretization(u(n), state_array(:, n), 1);
+            [A_(:, N), B_(:, n)] = linearization_discretization(u(n), state_array(:, n));
 
             A = A_(:, N);
             B = B_(:, n);
