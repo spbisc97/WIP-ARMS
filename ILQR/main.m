@@ -40,8 +40,8 @@ function main(Q, R, wclose)
 
         %find u control
         y_des = traj_d(:, floor(t / dt));
-        %u=iLQR_function(y,traj_d(:,floor(t/dt):end),t);
-        u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t);
+        u=iLQR_function(y,traj_d(:,floor(t/dt):end),t);
+        %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t);
         %u = LQR_function(y, y_des, Q, R);
         %save to plot
         control_array = [control_array, u];
