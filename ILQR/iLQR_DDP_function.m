@@ -14,7 +14,7 @@ function next_single_control = iLQR_DDP_function(istate, state_d, it)
     horizon = 4; %time S
     horizon_disc = floor(horizon / dt);
 
-    if horizon_disc > (sz) %controllo se lo stato desiderato
+    if horizon_disc > (sz) %controllo se lo stato desiderato 
         %horizon = (sz) * dt;
         horizon_disc = (sz);
     end
@@ -27,12 +27,12 @@ function next_single_control = iLQR_DDP_function(istate, state_d, it)
     L = ones(n_controls, (horizon_disc - 1) * n_states); %size depends both from the number of controls and states
     d = ones(n_controls, (horizon_disc - 1)); % size depends from the number of controls
 
-    if exist("u", "var") %recuperare controllo creato prededentemente e fare controlli che non sia sballato
+    if exist("u", "var") %recuperare controllo creato prededentemente e fare controlli che non sia sballato 
         [usz, ~] = size(u);
         u = [0, u];
-        u = [u(3:end), zeros(1, horizon_disc - usz)];
+        u = [u(:,3:end), zeros(n_controls, horizon_disc - usz)];
     else
-        u = ones(horizon_disc - 1, 1) * (0);
+        u = ones(n_controls, horizon_disc - 1) * (0);
     end
 
     state_array = zeros(n_states, horizon_disc);
@@ -73,7 +73,7 @@ function next_single_control = iLQR_DDP_function(istate, state_d, it)
             %derivatives
             q = Q * (state_array(:, n) - state_d(:, n));
             r = R * u(n);
-            [A_(:, N), B_(:, n)] = linearization_discretization(u(n), state_array(:, n));
+            [A_(:, N), B_(:, n)] = linearization_discretization(u(n), state_array(:, n),1);
 
             A = A_(:, N);
             B = B_(:, n);
