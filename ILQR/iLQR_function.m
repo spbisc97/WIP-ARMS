@@ -32,12 +32,12 @@ function next_single_control = iLQR_function(istate, state_d, it)
     L = zeros(1, horizon_disc - 1 * n_states); %size depends both from the number of controls and states
     l = zeros(1, horizon_disc - 1); % size depends from the number of controls
 
-    % if exist("u", "var")
-    %     [~, usz] = size(u);
-    %     u = [u(:,2:end); zeros(n_controls, horizon_disc - usz)];
-    % else
-    u = ones(1, horizon_disc - 1) * (0);
-    % end
+    if exist("u", "var")
+        [~, usz] = size(u);
+        u = [u(:,2:end), zeros(n_controls, horizon_disc - usz)];
+    else
+    u = ones(n_controls, horizon_disc - 1) * (0);
+    end
 
     new_u = u;
 
