@@ -12,7 +12,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     Qn = Q * 1000;
 
     iterations = 10000;
-    j_rm = 0.001;
+    j_rm = 1;
 
     horizon = 4; %time S
     horizon_disc = floor(horizon / dt) + 1;
@@ -23,27 +23,27 @@ function next_single_control = iLQR_function(istate, state_d, it)
     defects_max(4, 1) = 40;
 
     if horizon_disc > (sz)
-        horizon = (sz-1) * dt;
+        horizon = (sz - 1) * dt;
         horizon_disc = (sz);
     end
 
     S = zeros(n_states, horizon_disc * n_states);
     s = zeros(n_states, horizon_disc); %deep horizon+1 and hight is n_states
-    L = zeros(1, horizon_disc-1 * n_states); %size depends both from the number of controls and states
-    l = zeros(1, horizon_disc-1); % size depends from the number of controls
+    L = zeros(1, horizon_disc - 1 * n_states); %size depends both from the number of controls and states
+    l = zeros(1, horizon_disc - 1); % size depends from the number of controls
 
     % if exist("u", "var")
     %     [~, usz] = size(u);
     %     u = [u(:,2:end); zeros(n_controls, horizon_disc - usz)];
     % else
-        u = ones(1, horizon_disc - 1) * (0);
-   % end
+    u = ones(1, horizon_disc - 1) * (0);
+    % end
 
     new_u = u;
 
     state_array = zeros(n_states, horizon_disc);
     state_array(:, 1) = istate;
-    time_array = it:dt:(horizon+it);
+    time_array = it:dt:(horizon + it);
 
     for elem = 1:(horizon_disc - 1) %compute the forward dynamics to define the defects
         dy = ForwardDynamics(state_array(:, elem), u(elem));
@@ -62,7 +62,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
         S(:, horizon_disc * 4 - 3:horizon_disc * 4) = Qn;
         A_ = zeros(n_states, (horizon_disc - 1) * n_states);
         B_ = zeros(n_states, horizon_disc - 1);
-        state_d(:, 1:end-1)=state_array(:, 1:end-1);
+        state_d(:, 1:end - 1) = state_array(:, 1:end - 1);
         %back
         for n = (horizon_disc - 1):-1:1
             N = (4 * n - 3):(4 * n);
@@ -85,39 +85,48 @@ function next_single_control = iLQR_function(istate, state_d, it)
 
             Gxu = G';
             Gux = G;
-            S(:, N) = Gxx - L(:, N).' * H * L(:, N);%- Gxu * L(:, N) - L(:, N).' * Gux; %forse se so sbagliati con il meno
+            S(:, N) = Gxx - L(:, N).' * H * L(:, N); %- Gxu * L(:, N) - L(:, N).' * Gux; %forse se so sbagliati con il meno
             s(:, n) = gx + G.' * l(:, n) + L(:, N).' * (h + H * l(:, n));
 
         end
 
-      
         new_state_array = zeros(n_states, horizon_disc);
         new_state_array(:, 1) = istate; %forward iteration
         new_u = zeros(n_controls, horizon_disc - 1);
+        solution_found = false;
+        alpha = 0.5;
+        while ~solution_found
 
-        for n = 1:horizon_disc - 1
-            N = (4 * n - 3):(4 * n); 
-            % A = A_(:, N);
-            % B = B_(:, n);
-            new_u(:, n) = u(:, n) + 0.05*l(:, n) + L(:, N) * (new_state_array(:, n) - state_array(:, n));
+            for n = 1:horizon_disc - 1
+                N = (4 * n - 3):(4 * n);
+                % A = A_(:, N);
+                % B = B_(:, n);
+                new_u(:, n) = u(:, n) + alpha * l(:, n) + L(:, N) * (new_state_array(:, n) - state_array(:, n));
 
-            % new_state_array(:,n+1) =  state_array(:, n + 1) ... % take the previous value
-            %     + (A + B * L(:, N)) * (new_state_array(:, n) - state_array(:, n)) ... %like add the control
-            %     +B * l(:, n) + (state_array(:,n+1)-state_d(:,n+1));
+                % new_state_array(:,n+1) =  state_array(:, n + 1) ... % take the previous value
+                %     + (A + B * L(:, N)) * (new_state_array(:, n) - state_array(:, n)) ... %like add the control
+                %     +B * l(:, n) + (state_array(:,n+1)-state_d(:,n+1));
 
-            dy = ForwardDynamics(new_state_array(:, n), new_u(:, n));
-            new_state_array(:, n + 1) = euler_integration_fun(new_state_array(:, n), dy, dt);
+                dy = ForwardDynamics(new_state_array(:, n), new_u(:, n));
+                new_state_array(:, n + 1) = euler_integration_fun(new_state_array(:, n), dy, dt);
+            end
+
+            if isnan(new_u(:, n))
+                alpha = alpha / 2;
+            else
+                solution_found = true;
+            end
+
         end
 
-       
         state_array = zeros(n_states, horizon_disc);
         state_array(:, 1) = istate;
+
         for elem = 1:horizon_disc - 1
             %compute the forward dynamics to define the defects
             dy = ForwardDynamics(state_array(:, elem), new_u(elem));
             state_array(:, elem + 1) = euler_integration_fun(state_array(:, elem), dy, dt);
         end
-
 
         tiledlayout(2, 1);
         nexttile
@@ -138,7 +147,6 @@ function next_single_control = iLQR_function(istate, state_d, it)
         pause(0.005)
         u = new_u;
         next_single_control = u(1);
-
 
         all((abs(state_array(:, horizon_disc) - state_d(:, horizon_disc))) < defects_max)
         relative < j_rm
