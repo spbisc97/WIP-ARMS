@@ -14,7 +14,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     iterations = 10000;
     j_rm = 1;
 
-    horizon = 4; %time S
+    horizon = 5; %time S
     horizon_disc = floor(horizon / dt) + 1;
     defects_max = ones(n_states, 1) * 0.5; %difetti massimi per cui validare i controlli
     defects_max(1, 1) = 0.2;
@@ -26,6 +26,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
         horizon = (sz - 1) * dt;
         horizon_disc = (sz);
     end
+    state_d=state_d(:,1:horizon_disc);
 
     S = zeros(n_states, horizon_disc * n_states);
     s = zeros(n_states, horizon_disc); %deep horizon+1 and hight is n_states
@@ -128,29 +129,23 @@ function next_single_control = iLQR_function(istate, state_d, it)
             state_array(:, elem + 1) = euler_integration_fun(state_array(:, elem), dy, dt);
         end
 
-        tiledlayout(2, 1);
-        nexttile
-        plot(time_array, [state_array(1, :); state_array(3, :)])
-        legend("x", "phi")
-        nexttile
-        plot(time_array, [state_array(2, :); state_array(4, :)])
-        legend("dx", "dphi")
+%         tiledlayout(2, 1);
+%         nexttile
+%         plot(time_array, [state_array(1, :); state_array(3, :)])
+%         legend("x", "phi")
+%         nexttile
+%         plot(time_array, [state_array(2, :); state_array(4, :)])
+%         legend("dx", "dphi")
 
-        new_J = cost(state_array, state_d, new_u, Q, R, Qn);
+         new_J = cost(state_array, state_d, new_u, Q, R, Qn);
 
         relative = abs(new_J - J) / new_J;
         disp('new_cost')
         disp(new_J)
-        disp('relative')
-        disp(J)
 
         pause(0.005)
         u = new_u;
         next_single_control = u(1);
-
-        all((abs(state_array(:, horizon_disc) - state_d(:, horizon_disc))) < defects_max)
-        relative < j_rm
-
         if (((relative < j_rm)) && all((abs(state_array(:, horizon_disc) - state_d(:, horizon_disc))) < defects_max))
             return
         end

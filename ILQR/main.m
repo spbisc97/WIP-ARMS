@@ -31,7 +31,7 @@ function main(Q, R, wclose)
     state_array = [y]; %array degli stati
     control_array = []; %array del controllo
     time_array = [t]; %array del tempo (dovrebbe coincidere con la l'array "time")
-    y_d_array = [0; 0; pi; 0]; %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
+    y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
 
     while t < tf 
         %find u control
