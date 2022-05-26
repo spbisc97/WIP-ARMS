@@ -51,10 +51,23 @@ function next_single_control = iLQR_function(istate, state_d, it)
         state_array(:, elem + 1) = euler_integration_fun(state_array(:, elem), dy, dt);
     end
 
+
     J = cost(state_array, state_d, new_u, Q, R, Qn);
     disp("J")
     disp(J)
 
+    %plot(time_array, state_array)
+    %legend("x","dx","phi","dphi")
+    %pause
+    % disp("istate")
+    % disp(state')
+    % disp("state array")
+    % disp(state_array')
+    % disp("state_d traj")
+    % disp(state_d(1:horizon_disc)')
+    %
+    % plot(time_array,state_array)
+    
     %start the optimizing iterations
     for iteration = 1:iterations - 1
 
@@ -152,6 +165,24 @@ function next_single_control = iLQR_function(istate, state_d, it)
 
         J = new_J;
     end
+
+%         disp("istate")
+%         disp(istate)
+%         disp("state array")
+%         disp(state_array(:, :))
+%         disp("state_d traj")
+%         disp(state_d(:, 1:horizon_disc))
+%         disp("defects")
+%         disp(defects(:, :))
+%         disp("control")
+%         disp(u')
+%         tiledlayout(2, 1);
+%         nexttile
+%         plot(time_array, [state_array(1, :); state_array(3, :)])
+%         legend("x", "phi")
+%         nexttile
+%         plot(time_array, [state_array(2, :); state_array(4, :)])
+%         legend("dx", "dphi")
 
     %save('ilqrVars.mat') % save variables to
 end

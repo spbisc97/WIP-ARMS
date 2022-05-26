@@ -28,6 +28,7 @@ function [A, B] = linearization_discretization(u, state, discrete)
         0
         - cos(y3) / (L * (M - m * (cos(y3)^2 - 1)))];
 
+
     if discrete == 1
         n = 4;
         Ad = (eye(n) + A * Ts / 2.) * pinv(eye(n) - A * Ts / 2.); %tustin, bilinear trans
