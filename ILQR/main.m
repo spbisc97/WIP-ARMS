@@ -27,7 +27,7 @@ function main(Q, R, wclose)
     u = 0;
     y = [0; 0; pi; 0]; %initial point
     t = 0.01; %initial time
-    tf = 3; %final time
+    tf = 10; %final time
     dt = 0.01; %increasing time %time step
 
     time = t:dt:tf; %time array
