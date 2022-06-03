@@ -84,7 +84,7 @@ Gux = zeros(Nx)
 
 
 iter = 0
-while (maximum(abs.(d[:])) > 1e-4)
+while (maximum(abs.(d[:])) > 1e-3)
     global iter, J, p, P, d, K, DJ, gx, gu, Gxx, Gux, Gxu, Guu,Qn
     
     iter += 1
@@ -127,6 +127,15 @@ while (maximum(abs.(d[:])) > 1e-4)
     end
 
     #Forward
+    if any(isnan,K[:, :, 1])
+        global utraj
+        utraj = randn(Nt - 1)
+        for k = 1:(Nt-1)
+            xtraj[:, k+1] .= dynamics_rk4(xtraj[:, k], utraj[k])
+        end
+        d[:].=1
+        continue
+    end
     xn = zeros(Nx, Nt)
     xn[:, 1] = xtraj[:, 1]
     un = zeros(Nt - 1)
@@ -140,13 +149,16 @@ while (maximum(abs.(d[:])) > 1e-4)
             catch Exception
                 un[Nt-1] = NaN
                 display("catch")
-                sleep(1)
+                sleep(0.001)
                 break
             end
+            
+
         end
         display("α")
         display(α)
         display(K[:, :, 1])
+        
         if isnan(un[Nt-1])
             α = α / 2
         else
