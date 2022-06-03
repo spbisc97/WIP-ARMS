@@ -8,13 +8,13 @@ function next_single_control = iLQR_function(istate, state_d, it)
     Q = eye(n_states) * 0.001;
     Q(1, 1) = 1;
     Q(3, 3) = 1;
-    R = 0.001;
+    R = 0.0001;
     Qn = Q * 1000;
 
     iterations = 10000;
     j_rm = 0.1;
 
-    horizon = 5; %time S
+    horizon = 2; %time S
     horizon_disc = floor(horizon / dt) + 1;
     defects_max = ones(n_states, 1) * 0.5; %difetti massimi per cui validare i controlli
     defects_max(1, 1) = 0.2;
@@ -79,11 +79,11 @@ function next_single_control = iLQR_function(istate, state_d, it)
 
         %cut defects in multiple pieces
         [~,len]=size(state_array);
-        len=floor(len/3);
+        len=floor(len/2);
         state_d(:, 1:len - 1) = state_array(:, 1:len - 1);
-        state_d(:, len+1:len*2- 1) = state_array(:, len+1:len*2 - 1);
-        state_d(:, len*2+1:len*3- 1) = state_array(:, len*2+1:len*3 - 1);
-        state_d(:, len*3+1:end - 1) = state_array(:, len*3+1:end - 1);
+        % state_d(:, len+1:len*2- 1) = state_array(:, len+1:len*2 - 1);
+        % state_d(:, len*2+1:len*3- 1) = state_array(:, len*2+1:len*3 - 1);
+        state_d(:, len*1+1:end - 1) = state_array(:, len*1+1:end - 1);
         %back
         for n = (horizon_disc - 1):-1:1
             N = (4 * n - 3):(4 * n);
@@ -120,16 +120,21 @@ function next_single_control = iLQR_function(istate, state_d, it)
 
             for n = 1:horizon_disc - 1
                 N = (4 * n - 3):(4 * n);
+              
+                new_u(:, n) = u(:, n) +  alpha* l(:, n) + L(:, N) * (new_state_array(:, n) - state_array(:, n));
+
                 % A = A_(:, N);
                 % B = B_(:, n);
-                new_u(:, n) = u(:, n) + alpha * l(:, n) + L(:, N) * (new_state_array(:, n) - state_array(:, n));
-
                 % new_state_array(:,n+1) =  state_array(:, n + 1) ... % take the previous value
                 %     + (A + B * L(:, N)) * (new_state_array(:, n) - state_array(:, n)) ... %like add the control
-                %     +B * l(:, n) + (state_array(:,n+1)-state_d(:,n+1));
+                %     +B*alpha*  l(:, n) + (state_array(:,n+1)-state_d(:,n+1));
 
                 dy = ForwardDynamics(new_state_array(:, n), new_u(:, n));
                 new_state_array(:, n + 1) = euler_integration_fun(new_state_array(:, n), dy, dt);
+                if isnan(new_state_array(:, n + 1))
+                    new_u(:, n)=NaN;
+                    break
+                end
             end
 
             if isnan(new_u(:, n))
@@ -141,13 +146,29 @@ function next_single_control = iLQR_function(istate, state_d, it)
         end
 
         state_array = zeros(n_states, horizon_disc);
-        state_array(:, 1) = istate;
+        state_array(:, 1) = new_state_array(:, 1);
+        state_array(:, len) = new_state_array(:, len);
 
-        for elem = 1:horizon_disc - 1
+
+        for elem = 1:len-2
+
+            %state_array(:,elem+1)=dynamics_rk4(state_array(:, elem),new_u(elem),dt);
             %compute the forward dynamics to define the defects
             dy = ForwardDynamics(state_array(:, elem), new_u(elem));
             state_array(:, elem + 1) = euler_integration_fun(state_array(:, elem), dy, dt);
         end
+        for elem = len:horizon_disc - 1
+
+            %state_array(:,elem+1)=dynamics_rk4(state_array(:, elem),new_u(elem),dt);
+            %compute the forward dynamics to define the defects
+            dy = ForwardDynamics(state_array(:, elem), new_u(elem));
+            state_array(:, elem + 1) = euler_integration_fun(state_array(:, elem), dy, dt);
+        end
+
+        % disp(state_array_test);
+
+        % pause
+
 
 %         tiledlayout(2, 1);
 %         nexttile
@@ -167,7 +188,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
         u = new_u;
         next_single_control = u(1);
         if (((relative < j_rm)) && all((abs(state_array(:, horizon_disc) - state_d(:, horizon_disc))) < defects_max))
-           
+        
             %plot before exit to understand what is happening
             tiledlayout(2, 1);
             nexttile
@@ -176,7 +197,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
             nexttile
             plot(time_array, [state_array(2, :); state_array(4, :)])
             legend("dx", "dphi")
-            pause(0.01)
+            pause
     
             return
         end
@@ -184,7 +205,6 @@ function next_single_control = iLQR_function(istate, state_d, it)
         J = new_J;
     end
 
-       
     %save('ilqrVars.mat') % save variables to
 end
 
