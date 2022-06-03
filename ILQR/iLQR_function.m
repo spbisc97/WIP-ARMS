@@ -14,7 +14,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     iterations = 10000;
     j_rm = 0.1;
 
-    horizon = 2.99; %time S
+    horizon = 1.99; %time S
     horizon_disc = floor(horizon / dt) + 1;
     defects_max = ones(n_states, 1) * 0.5; %difetti massimi per cui validare i controlli
     defects_max(1, 1) = 0.2;
@@ -61,6 +61,8 @@ function next_single_control = iLQR_function(istate, state_d, it)
     len = floor(len / 2);
     % defects=state_array(:,:) - state_d(:,:);
     defects = state_array(:, :) * 0;
+    defects(:, len) = state_array(:, len) - state_d(:, len);
+
     defects(:, end) = state_array(:, end) - state_d(:, end);
     defects = circshift(defects, -1, 2);
     
@@ -116,10 +118,13 @@ function next_single_control = iLQR_function(istate, state_d, it)
                 % B = B_(:, n);
                 % new_state_array(:,n+1) =  state_array(:, n + 1) ... % take the previous value
                 %     + (A + B * L(:, N)) * (new_state_array(:, n) - state_array(:, n)) ... %like add the control
-                %     +B*alpha*  l(:, n) + (defects(:,n));
+                %     +B*alpha* l(:, n) + (defects(:,n));
 
                 dy = ForwardDynamics(new_state_array(:, n), new_u(:, n));
                 new_state_array(:, n + 1) = euler_integration_fun(new_state_array(:, n), dy, dt);
+
+                %  state_array(:,elem+1)=dynamics_rk4(state_array(:, elem),new_u(elem),dt);
+
                 if isnan(new_state_array(:, n + 1))
                     new_u(:, n) = NaN;
                     break
@@ -135,39 +140,67 @@ function next_single_control = iLQR_function(istate, state_d, it)
         end
 
         state_array = zeros(n_states, horizon_disc);
+
         state_array(:, 1)=istate;
         for elem = 1:horizon_disc - 1
-            % state_array(:,elem+1)=dynamics_rk4(state_array(:, elem),new_u(elem),dt);
-            %compute the forward dynamics to define the defects
-            dy = ForwardDynamics(state_array(:, elem), new_u(elem));
-            state_array(:, elem + 1) = euler_integration_fun(state_array(:, elem), dy, dt);
+            state_array(:,elem+1)=dynamics_rk4(state_array(:, elem),new_u(elem),dt);
+        %     %compute the forward dynamics to define the defects
+            % dy = ForwardDynamics(state_array(:, elem), new_u(elem));
+            % state_array(:, elem + 1) = euler_integration_fun(state_array(:, elem), dy, dt);
+        end
+        
+        if horizon_disc<8
+            pieces=1;
+        else
+            pieces=4;
         end
 
-        defects(:,end)=state_array(:, end) - state_d(:, end);
+        [~, len] = size(state_array);
+        len = floor(len / pieces);
+
+        nn=zeros(4,pieces);
+        ns=nn;
+        for i=1:pieces
+            nn(:,i)=state_array(:,len*(i-1)+1);
+        end
+        
+        parfor i=1:pieces
+            stato=nn(:,i);
+            if i==pieces
+                fine=horizon_disc-1;
+            else
+                fine=len*(i)-1;
+            end
+            for elem = len*(i-1):fine
+                if elem==0 
+                    continue 
+                end
+            %   stato=dynamics_rk4(stato,new_u(elem),dt);
+            %   compute the forward dynamics to define the defects
+                dy = ForwardDynamics(stato, new_u(elem));
+                stato = euler_integration_fun(stato, dy, dt);
+            end
+            ns(:,i)=stato;
+        end
+        
+
+        for i=1:pieces-1
+            defects(:, len*i) = ns(:,i)- nn(:, i+1) ;
+        end
+        defects(:, end) = ns(:,end) - state_d(:, end);
+        
+%         defects(:, len) = state_array(:, len) - state_d(:, len);
+%         defects(:, end) = state_array(:, end) - state_d(:, end);
+
         defects = circshift(defects, -1, 2);
-
-        % disp(state_array_test);
-
-        % pause
-
-        %         tiledlayout(2, 1);
-        %         nexttile
-        %         plot(time_array, [state_array(1, :); state_array(3, :)])
-        %         legend("x", "phi")
-        %         nexttile
-        %         plot(time_array, [state_array(2, :); state_array(4, :)])
-        %         legend("dx", "dphi")
 
         new_J = cost(state_array, state_d, new_u, Q, R, Qn);
 
         relative = abs(new_J - J) / new_J;
         disp('new_cost')
         disp(new_J)
-
-        pause(0.005)
         u = new_u;
         next_single_control = u(1);
-
         if (((relative < j_rm)) && all((abs(state_array(:, horizon_disc) - state_d(:, horizon_disc))) < defects_max))
 
             %plot before exit to understand what is happening
@@ -178,15 +211,12 @@ function next_single_control = iLQR_function(istate, state_d, it)
             nexttile
             plot(time_array, [state_array(2, :); state_array(4, :)])
             legend("dx", "dphi")
-            pause
-
+             pause(0.01)
+           
             return
         end
-
         J = new_J;
     end
-
-    %save('ilqrVars.mat') % save variables to
 end
 
 function state = dynamics_rk4(state, u, dt)
