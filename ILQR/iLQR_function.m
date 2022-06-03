@@ -8,7 +8,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     Q = eye(n_states) * 0.001;
     Q(1, 1) = 1;
     Q(3, 3) = 1;
-    R = 0.0001;
+    R = 0.001;
     Qn = Q * 1000;
 
     iterations = 10000;
@@ -176,7 +176,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
             nexttile
             plot(time_array, [state_array(2, :); state_array(4, :)])
             legend("dx", "dphi")
-            pause(1)
+            pause(0.01)
     
             return
         end
