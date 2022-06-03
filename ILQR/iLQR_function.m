@@ -5,14 +5,14 @@ function next_single_control = iLQR_function(istate, state_d, it)
     [n_states, sz] = size(state_d);
     n_controls = 1;
 
-    Q = eye(n_states) * 1;
-    Q(1, 1) = 10;
-    Q(3, 3) = 10;
+    Q = eye(n_states) * 0.001;
+    Q(1, 1) = 1;
+    Q(3, 3) = 1;
     R = 0.0001;
     Qn = Q * 1000;
 
     iterations = 10000;
-    j_rm = 1;
+    j_rm = 0.1;
 
     horizon = 5; %time S
     horizon_disc = floor(horizon / dt) + 1;
@@ -76,7 +76,14 @@ function next_single_control = iLQR_function(istate, state_d, it)
         S(:, horizon_disc * 4 - 3:horizon_disc * 4) = Qn;
         A_ = zeros(n_states, (horizon_disc - 1) * n_states);
         B_ = zeros(n_states, horizon_disc - 1);
-        state_d(:, 1:end - 1) = state_array(:, 1:end - 1);
+
+        %cut defects in multiple pieces
+        [~,len]=size(state_array);
+        len=floor(len/3);
+        state_d(:, 1:len - 1) = state_array(:, 1:len - 1);
+        state_d(:, len+1:len*2- 1) = state_array(:, len+1:len*2 - 1);
+        state_d(:, len*2+1:len*3- 1) = state_array(:, len*2+1:len*3 - 1);
+        state_d(:, len*3+1:end - 1) = state_array(:, len*3+1:end - 1);
         %back
         for n = (horizon_disc - 1):-1:1
             N = (4 * n - 3):(4 * n);
@@ -150,7 +157,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
 %         plot(time_array, [state_array(2, :); state_array(4, :)])
 %         legend("dx", "dphi")
 
-         new_J = cost(state_array, state_d, new_u, Q, R, Qn);
+        new_J = cost(state_array, state_d, new_u, Q, R, Qn);
 
         relative = abs(new_J - J) / new_J;
         disp('new_cost')
@@ -160,30 +167,24 @@ function next_single_control = iLQR_function(istate, state_d, it)
         u = new_u;
         next_single_control = u(1);
         if (((relative < j_rm)) && all((abs(state_array(:, horizon_disc) - state_d(:, horizon_disc))) < defects_max))
+           
+            %plot before exit to understand what is happening
+            tiledlayout(2, 1);
+            nexttile
+            plot(time_array, [state_array(1, :); state_array(3, :)])
+            legend("x", "phi")
+            nexttile
+            plot(time_array, [state_array(2, :); state_array(4, :)])
+            legend("dx", "dphi")
+            pause(1)
+    
             return
         end
 
         J = new_J;
     end
 
-%         disp("istate")
-%         disp(istate)
-%         disp("state array")
-%         disp(state_array(:, :))
-%         disp("state_d traj")
-%         disp(state_d(:, 1:horizon_disc))
-%         disp("defects")
-%         disp(defects(:, :))
-%         disp("control")
-%         disp(u')
-%         tiledlayout(2, 1);
-%         nexttile
-%         plot(time_array, [state_array(1, :); state_array(3, :)])
-%         legend("x", "phi")
-%         nexttile
-%         plot(time_array, [state_array(2, :); state_array(4, :)])
-%         legend("dx", "dphi")
-
+       
     %save('ilqrVars.mat') % save variables to
 end
 
