@@ -15,7 +15,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     iterations = 10000;
     j_rm = 0.1;
 
-    horizon = 5.99; %time S
+    horizon = 1.99; %time S
     horizon_disc = floor(horizon / dt) + 1;
     defects_max = ones(n_states, 1) * 0.5; %difetti massimi per cui validare i controlli
     defects_max(1, 1) = 0.2;
@@ -68,39 +68,8 @@ function next_single_control = iLQR_function(istate, state_d, it)
     %start the optimizing iterations
     for iteration = 1:iterations - 1
 
-        %Fill the S and s matrix
-        s(:, horizon_disc) = Qn * (defects(:, horizon_disc-1));
-        S(:, horizon_disc * 4 - 3:horizon_disc * 4) = Qn;
-        A_ = zeros(n_states, (horizon_disc - 1) * n_states);
-        B_ = zeros(n_states, horizon_disc - 1);
-
-        %back
-        for n = (horizon_disc - 1):-1:1
-            N = (4 * n - 3):(4 * n);
-            [A_(:, N), B_(:, n)] = linearization_discretization(u(:, n), state_array(:, n), 1); %maybe discrete
-            A = A_(:, N);
-            B = B_(:, n);
-
-            %compute r,h,G,H to simplify S and s computations
-            P = 0; %repmat([0], [1, n_states]); %set mixed weight to zero delta_u*P*delta_x
-            r = R * u(:, n); % the derivative of uRu
-            q = Q * (state_array(:, n) - state_d(:, n));
-            h = r + B.' * (s(:, n + 1) + S(:, N + 4) * (defects(:, n))); %gu + S(:, N + 4) * defects(:, n+1)
-            G = P + B.' * S(:, N + 4) * A; %Gux
-            H = R + B.' * S(:, N + 4) * B; %Guu
-            L(:, N) = -pinv(H) * G; %K
-            l(:, n) = -pinv(H) * h; %d
-
-            Gxx = Q + A.' * S(:, N + 4) * A;
-            gx = q + A' * (s(:, n + 1) + S(:, N + 4) * (defects(:, n)));
-
-            Gxu = G';
-            Gux = G;
-            S(:, N) = Gxx - L(:, N).' * H * L(:, N); %- Gxu * L(:, N) - L(:, N).' * Gux; %forse se so sbagliati con il meno
-            s(:, n) = gx + G.' * l(:, n) + L(:, N).' * (h + H * l(:, n));
-
-        end
-        [L,l,A_,B_]=backward(horizon_disc,Q,R,Qn)
+        
+        [L,l,A_,B_]=backward(n_states,horizon_disc,defects,state_array,u,Q,R,Qn);
 
         new_state_array = zeros(n_states, horizon_disc);
         new_state_array(:, 1) = istate; %forward iteration
@@ -219,7 +188,6 @@ function next_single_control = iLQR_function(istate, state_d, it)
             plot(time_array, [state_array(2, :); state_array(4, :)])
             legend("dx", "dphi")
              pause(0.01)
-           
             return
         end
         
@@ -244,4 +212,41 @@ function J = cost(state_array, state_d, u, Q, R, Qn)
 
     i = horizon_disc;
     J = J + (state_array(:, i) - state_d(:, i))' * Qn * (state_array(:, i) - state_d(:, i));
+end
+
+
+
+function [L,l,A_,B_] =backward(n_states,horizon_disc,defects,state_array,u,Q,R,Qn)
+    %Fill the S and s matrix
+    s(:, horizon_disc) = Qn * (defects(:, horizon_disc-1));
+    S(:, horizon_disc * 4 - 3:horizon_disc * 4) = Qn;
+    A_ = zeros(n_states, (horizon_disc - 1) * n_states);
+    B_ = zeros(n_states, horizon_disc - 1);
+
+    %back
+    for n = (horizon_disc - 1):-1:1
+        N = (4 * n - 3):(4 * n);
+        [A_(:, N), B_(:, n)] = linearization_discretization(u(:, n), state_array(:, n), 1); %maybe discrete
+        A = A_(:, N);
+        B = B_(:, n);
+
+        %compute r,h,G,H to simplify S and s computations
+        P = 0; %repmat([0], [1, n_states]); %set mixed weight to zero delta_u*P*delta_x
+        r = R * u(:, n); % the derivative of uRu
+        q = Q * (defects(:, n));
+        h = r + B.' * (s(:, n + 1) + S(:, N + 4) * (defects(:, n))); %gu + S(:, N + 4) * defects(:, n+1)
+        G = P + B.' * S(:, N + 4) * A; %Gux
+        H = R + B.' * S(:, N + 4) * B; %Guu
+        L(:, N) = -pinv(H) * G; %K
+        l(:, n) = -pinv(H) * h; %d
+
+        Gxx = Q + A.' * S(:, N + 4) * A;
+        gx = q + A' * (s(:, n + 1) + S(:, N + 4) * (defects(:, n)));
+
+        Gxu = G';
+        Gux = G;
+        S(:, N) = Gxx - L(:, N).' * H * L(:, N); %- Gxu * L(:, N) - L(:, N).' * Gux; %forse se so sbagliati con il meno
+        s(:, n) = gx + G.' * l(:, n) + L(:, N).' * (h + H * l(:, n));
+
+    end
 end
