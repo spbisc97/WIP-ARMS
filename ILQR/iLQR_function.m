@@ -4,6 +4,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     dt = 0.01; %delta t for integration
     [n_states, sz] = size(state_d);
     n_controls = 1;
+    alpha=0.5;
 
     Q = eye(n_states) * 0.001;
     Q(1, 1) = 1;
@@ -14,7 +15,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     iterations = 10000;
     j_rm = 0.1;
 
-    horizon = 1.99; %time S
+    horizon = 5.99; %time S
     horizon_disc = floor(horizon / dt) + 1;
     defects_max = ones(n_states, 1) * 0.5; %difetti massimi per cui validare i controlli
     defects_max(1, 1) = 0.2;
@@ -61,8 +62,6 @@ function next_single_control = iLQR_function(istate, state_d, it)
     len = floor(len / 2);
     % defects=state_array(:,:) - state_d(:,:);
     defects = state_array(:, :) * 0;
-    defects(:, len) = state_array(:, len) - state_d(:, len);
-
     defects(:, end) = state_array(:, end) - state_d(:, end);
     defects = circshift(defects, -1, 2);
     
@@ -70,7 +69,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     for iteration = 1:iterations - 1
 
         %Fill the S and s matrix
-        s(:, horizon_disc) = Qn * (state_array(:, horizon_disc) - state_d(:, horizon_disc));
+        s(:, horizon_disc) = Qn * (defects(:, horizon_disc-1));
         S(:, horizon_disc * 4 - 3:horizon_disc * 4) = Qn;
         A_ = zeros(n_states, (horizon_disc - 1) * n_states);
         B_ = zeros(n_states, horizon_disc - 1);
@@ -101,19 +100,18 @@ function next_single_control = iLQR_function(istate, state_d, it)
             s(:, n) = gx + G.' * l(:, n) + L(:, N).' * (h + H * l(:, n));
 
         end
+        [L,l,A_,B_]=backward(horizon_disc,Q,R,Qn)
 
         new_state_array = zeros(n_states, horizon_disc);
         new_state_array(:, 1) = istate; %forward iteration
         new_u = zeros(n_controls, horizon_disc - 1);
         solution_found = false;
-        alpha = 0.5;
+        alpha=1;
         while ~solution_found
-
+            % disp("enter")
             for n = 1:horizon_disc - 1
                 N = (4 * n - 3):(4 * n);
-
-                new_u(:, n) = u(:, n) + alpha * l(:, n) + L(:, N) * (new_state_array(:, n) - state_array(:, n));
-
+                new_u(:, n) = u(:, n) + alpha * l(:, n) +  L(:, N) * (new_state_array(:, n) - state_array(:, n));
                 % A = A_(:, N);
                 % B = B_(:, n);
                 % new_state_array(:,n+1) =  state_array(:, n + 1) ... % take the previous value
@@ -125,14 +123,19 @@ function next_single_control = iLQR_function(istate, state_d, it)
 
                 %  state_array(:,elem+1)=dynamics_rk4(state_array(:, elem),new_u(elem),dt);
 
-                if isnan(new_state_array(:, n + 1))
-                    new_u(:, n) = NaN;
-                    break
-                end
+                % if isnan(new_state_array(:, n + 1))
+                %     new_u(:, n) = NaN;
+                %     disp("break")
+                %     break
+                % end
             end
-
-            if isnan(new_u(:, n))
+            new_J=cost(new_state_array, state_d, new_u, Q, R, Qn);
+            if new_J>J || isnan(new_J)
                 alpha = alpha / 2;
+                % disp(alpha)
+            if alpha==0
+                alpha=1;
+            end
             else
                 solution_found = true;
             end
@@ -199,7 +202,11 @@ function next_single_control = iLQR_function(istate, state_d, it)
         relative = abs(new_J - J) / new_J;
         disp('new_cost')
         disp(new_J)
-        u = new_u;
+        if J>new_J
+            J=new_J;
+            u = new_u;
+            alpha=alpha*2;
+        end
         next_single_control = u(1);
         if (((relative < j_rm)) && all((abs(state_array(:, horizon_disc) - state_d(:, horizon_disc))) < defects_max))
 
@@ -215,7 +222,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
            
             return
         end
-        J = new_J;
+        
     end
 end
 
