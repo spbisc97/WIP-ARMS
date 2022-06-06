@@ -1,21 +1,23 @@
-function next_single_control = iLQR_function(istate, state_d, it)
-    global u %use global u to remember last optimized values
+function u = iLQR_function(istate, state_d, it,u)
+    %global u %use global u to remember last optimized values
     next_single_control = 0; %default next control if we have a nan value
     dt = 0.01; %delta t for integration
     [n_states, sz] = size(state_d);
     n_controls = 1;
     alpha=0.5;
+    beta=1;
+
 
     Q = eye(n_states) * 0.1;
-    Q(1, 1) = 1;
+    Q(1, 1) = 5;
     Q(3, 3) = 1;
-    R = 0.001;
-    Qn = Q * 1000;
+    R = 0.0001;
+    Qn = Q * 100;
 
     iterations = 10000;
-    j_rm = 0.05;
+    j_rm = 0.001;
 
-    horizon = 3.99; %time S
+    horizon = 5.99; %time S
     horizon_disc = floor(horizon / dt) + 1;
     defects_max = ones(n_states, 1) * 0.5; %difetti massimi per cui validare i controlli
     defects_max(1, 1) = 0.2;
@@ -50,6 +52,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     end
 
     J = cost(state_array, state_d, new_u, Q, R, Qn);
+    new_J=J;
     disp("J")
     disp(J)
 
@@ -69,17 +72,17 @@ function next_single_control = iLQR_function(istate, state_d, it)
         new_state_array(:, 1) = istate; %forward iteration
         new_u = zeros(n_controls, horizon_disc - 1);
         solution_found = false;
-       
+        old_beta=beta;
         while ~solution_found
             % disp("enter")
             for n = 1:horizon_disc - 1
                 N = (4 * n - 3):(4 * n);
-                new_u(:, n) = u(:, n) + alpha * l(:, n) +  L(:, N) * (new_state_array(:, n) - state_array(:, n));
+                new_u(:, n) = u(:, n) + alpha * l(:, n) +  beta *L(:, N) * (new_state_array(:, n) - state_array(:, n));
                 if J<0
                 A = A_(:, N);
                 B = B_(:, n);
-                new_state_array(:,n+1) =  state_array(:, n + 1) ... % take the previous value
-                    + (A + B * L(:, N)) * (state_array(:, n)-new_state_array(:, n) ) ... %like add the control
+                new_state_array(:,n+1) = state_array(:, n + 1) ... % take the previous value
+                    + (A + B * beta * L(:, N)) * (new_state_array(:, n)-state_array(:, n)) ... %like add the control
                     +B* alpha* l(:, n) + (defects(:,n));
                 else
                 dy = ForwardDynamics(new_state_array(:, n), new_u(:, n));
@@ -93,11 +96,13 @@ function next_single_control = iLQR_function(istate, state_d, it)
                 %     break
                 % end
             end
-            new_J=cost(new_state_array, state_d, new_u, Q, R, Qn);
-            if  all(isnan(new_u))
-                alpha = alpha / 2;
-                % disp(alpha)
+            if  any(isnan(new_u)) || any(any(new_state_array>[1e8;1e8;1e8;1e8]))
+                old_beta=beta;
+                beta=beta/2; %or beta=0
+                alpha=alpha/2;
             else
+                beta=old_beta;
+                %alpha=old_alpha;
                 solution_found = true;
             end
 
@@ -105,12 +110,12 @@ function next_single_control = iLQR_function(istate, state_d, it)
         %[new_state_array,defects] = forward_shoot(new_state_array(:, 1),horizon_disc,state_d,new_u,dt);
 
         [new_state_array,defects]=forward_multi_shoot(new_state_array(:, 1),horizon_disc,new_state_array,state_d,new_u,dt);
-
+       
         %plot before exit to understand what is happening
             tiledlayout(3, 1);
             nexttile
-            plot(time_array, [new_state_array(1, :); new_state_array(3, :)])
-            legend("x", "phi")
+            plot(time_array,[state_d(1,:);state_d(3,:);new_state_array(1, :); new_state_array(3, :)])
+            legend("xd", "phid","x", "phi")
             nexttile
             plot(time_array, [new_state_array(2, :); new_state_array(4, :)])
             legend("dx", "dphi")
@@ -118,14 +123,22 @@ function next_single_control = iLQR_function(istate, state_d, it)
             plot(time_array(1:end-1),new_u)
             pause(0.01)
 
+            old_new_J=new_J;
         new_J = cost(new_state_array, state_d, new_u, Q, R, Qn);
+        if floor(old_new_J*1e1)==floor(new_J*1e1)
+            beta=beta/3;
+            disp("beta split")
+            disp(beta)
+        end
 
         relative = abs(new_J - J) / new_J;
-        disp(['new_cost ',' min_cost'])
-        disp([new_J,J])
-        disp("relative")
-        disp(relative)
-        if all(~isnan(new_J))&&(J>new_J || relative < j_rm )
+        T=table(new_J,old_new_J,J,relative,'VariableNames',{'new_cost','prev_new_cost','prev_min_cost','relative'});
+        % disp(['new_cost ',' min_cost'])
+        % disp([new_J,J])
+        % disp("relative")
+        % disp(relative)
+        disp(T)
+        if all(~isnan(new_J))&&(J>new_J || relative < j_rm )&& J~=new_J
             state_array=new_state_array;
             J=new_J;
             u = new_u;
@@ -134,20 +147,19 @@ function next_single_control = iLQR_function(istate, state_d, it)
             alpha=alpha/2;
         end
         next_single_control = u(1);
-        if (((relative < j_rm))&& J<1e3 && all((abs(state_array(:, horizon_disc) - state_d(:, horizon_disc))) < defects_max))
+        if (((relative < j_rm)) && J<1e3 && all((abs(state_array(:, horizon_disc) - state_d(:, horizon_disc))) < defects_max))
 
             %plot before exit to understand what is happening
             tiledlayout(3, 1);
             nexttile
-            plot(time_array, [state_array(1, :); state_array(3, :)])
-            legend("x", "phi")
+            plot(time_array, [ state_d(1,:);state_d(3,:);state_array(1, :); state_array(3, :)])
+            legend("xd", "phid","x", "phi")
             nexttile
             plot(time_array, [state_array(2, :); state_array(4, :)])
             legend("dx", "dphi")
             nexttile
             plot(time_array(1:end-1),u)
             pause(0.01)
-
             return
         end
         
@@ -240,10 +252,10 @@ end
 
 function [x,defects]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt)  
     ix=ix(:);
-    if horizon_disc<8
+    if horizon_disc<40
         pieces=1;
     else
-        pieces=4;
+        pieces=8;
     end
 
     [~, len] = size(x_approx);

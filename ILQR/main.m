@@ -30,19 +30,19 @@ function main(Q, R, wclose)
     tf = 10; %final time
     dt = 0.01; %increasing time %time step
 
-    time = t:dt:tf; %time array
+    time = t:dt:tf+dt; %time array
     %traj_d=-0.06*(time-1.7).^5+0.6; %desired trajectory
     traj_d = repmat([1; 0; pi; 0], [1, (tf / dt)+1]);
-    %traj_d(1,:)=-0.06*(time-1.7).^5+0.6; %desired trajectory
+    traj_d(1,:)=-sin(time/2); %desired trajectory
     state_array = [y]; %array degli stati
     control_array = []; %array del controllo
     time_array = [t]; %array del tempo (dovrebbe coincidere con la l'array "time")
     y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
-
-    while t < tf 
+    u_list=iLQR_function(y,traj_d(:,floor(t/dt):end),t,u);
+    while t < tf-5
         %find u control
         y_des = traj_d(:, floor(t / dt));
-        u=iLQR_function(y,traj_d(:,floor(t/dt):end),t);
+        u=u_list(floor(t / dt));
         %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t);
         %u = LQR_function(y, y_des, Q, R);
         %save to plot
@@ -80,6 +80,57 @@ function main(Q, R, wclose)
     nexttile
     plot(time_array, [control_array, 0])
     title("controls")
+
+
+    y = [0; 0; pi; 0]; %initial point
+    t = 0.01; %initial time
+    state_array = [y]; %array degli stati
+    control_array = []; %array del controllo
+    time_array = [t]; %array del tempo (dovrebbe coincidere con la l'array "time")
+    y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
+
+    while t < tf-5
+        %find u control
+        
+        y_des = traj_d(:, floor(t / dt));
+        u_list=iLQR_function(y,traj_d(:,floor(t/dt):end),t,u_list);
+        u=u_list(floor(t / dt));
+        [A, B] = linearization_discretization(u, y, 1);
+        %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t);
+        %u = LQR_function(y, y_des, Q, R);
+        %save to plot
+        y=A*y+B*u;
+
+
+
+        control_array = [control_array, u];
+
+        
+        state_array = [state_array, y];
+        y_d_array = [y_d_array, y_des];
+        t = t + dt; %time increment
+        time_array = [time_array, t];
+
+    end
+    figure(2)
+    tiledlayout(3, 1)
+    nexttile
+    plot(time_array, state_array)
+    hold on
+    plot(time_array, y_d_array)
+    legend("x", "dx", "phi", "dphi", "d-x", "d-dx", "d-phi", "d-dphi")
+    title("trajectory and desired trajectory")
+
+    nexttile
+    plot(time_array, y_d_array - state_array)
+    legend("x", "dx", "phi", "dphi")
+    title("error trajectory")
+
+    nexttile
+    plot(time_array, [control_array, 0])
+    title("controls")
+
+
 
 end
 
