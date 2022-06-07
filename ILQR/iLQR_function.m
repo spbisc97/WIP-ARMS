@@ -157,10 +157,9 @@ end
 
 
 
-%
-%
-%Auxiliary Functions
+%% AUXILIARY FUNCTIONS
 
+%% RK4 Dynamics
 function state = dynamics_rk4(state, u, dt)
     f1 = ForwardDynamics(state, u);
     f2 = ForwardDynamics(state + 0.5 * dt * f1, u);
@@ -169,6 +168,7 @@ function state = dynamics_rk4(state, u, dt)
     state = state + (dt / 6) * (f1 + 2 * f2 + 2 * f3 + f4);
 end
 
+%% Cost Function
 function J = cost(state_array, state_d, u, Q, R, Qn)
     [~, horizon_disc] = size(state_array);
     J = 0;
@@ -183,7 +183,7 @@ end
 
 
 
-
+%% Backward 
 function [L,l,A_,B_] =backward(n_states,horizon_disc,defects,state_array,state_d,u,Q,R,Qn)
     S = zeros(n_states, horizon_disc * n_states);
     s = zeros(n_states, horizon_disc); %deep horizon+1 and hight is n_states
@@ -223,6 +223,8 @@ function [L,l,A_,B_] =backward(n_states,horizon_disc,defects,state_array,state_d
     end
 end
 
+%% Forward Shoot
+
 function [x,defects] = forward_shoot(ix,horizon_disc,state_d,u,dt)
     x=repmat(ix,1,horizon_disc);
     for elem = 1:horizon_disc - 1
@@ -237,6 +239,7 @@ function [x,defects] = forward_shoot(ix,horizon_disc,state_d,u,dt)
     defects = circshift(defects, -1, 2);
 end
 
+%% Forward Multi Shoot
 
 function [x,defects]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt)  
     ix=ix(:);
