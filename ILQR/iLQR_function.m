@@ -107,10 +107,10 @@ function u = iLQR_function(istate, state_d, it,u)
             end
 
         end
-        %[new_state_array,defects] = forward_shoot(new_state_array(:, 1),horizon_disc,state_d,new_u,dt);
+        %[new_state_array,defects,new_u] = forward_shoot(new_state_array(:, 1),horizon_disc,state_d,new_u,dt,L,l,state_array,alpha);
 
-        [new_state_array,defects]=forward_multi_shoot(new_state_array(:, 1),horizon_disc,new_state_array,state_d,new_u,dt);
-       
+        [new_state_array,defects,new_u]=forward_multi_shoot(new_state_array(:, 1),horizon_disc,new_state_array,state_d,new_u,dt,L,l,state_array,alpha);
+
         %plot before exit to understand what is happening
             tiledlayout(3, 1);
             nexttile
@@ -235,9 +235,13 @@ function [L,l,A_,B_] =backward(n_states,horizon_disc,defects,state_array,state_d
     end
 end
 
-function [x,defects] = forward_shoot(ix,horizon_disc,state_d,u,dt)
+function [x,defects,u] = forward_shoot(ix,horizon_disc,state_d,u,dt,L,l,state_array,alpha)
+   
     x=repmat(ix,1,horizon_disc);
     for elem = 1:horizon_disc - 1
+        n=elem;
+        N = (4 * n - 3):(4 * n);
+        u(:, n) = u(:, n) + alpha * l(:, n) +  L(:, N) * (x(:, n) - state_array(:, n));
         x(:,elem+1)=dynamics_rk4(x(:, elem),u(elem),dt);
     %     %compute the forward dynamics to define the defects
         % dy = ForwardDynamics(state_array(:, elem), new_u(elem));
@@ -245,12 +249,13 @@ function [x,defects] = forward_shoot(ix,horizon_disc,state_d,u,dt)
     end
     defects=zeros(length(ix),horizon_disc);
 
-    defects(:, end) = x(:,end) - state_d(:, end);
+    %defects(:, end) = x(:,end) - state_d(:, end);
     defects = circshift(defects, -1, 2);
+
 end
 
 
-function [x,defects]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt)  
+function [x,defects,u]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt,L,l,state_array,alpha)  
     ix=ix(:);
     if horizon_disc<40
         pieces=1;
@@ -267,9 +272,12 @@ function [x,defects]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt)
         nn(:,i)=x_approx(:,len*(i-1)+1);
     end
     statess=zeros(length(ix),horizon_disc,pieces);
+    uss=zeros(length(u(:,1)),horizon_disc-1,pieces);
+
     parfor i=1:pieces
 
         stato=zeros(length(ix),horizon_disc);
+        us=zeros(length(u(:,1)),horizon_disc-1)
         t=len*(i-1);
         t=t+(t==0);
         stato(:,t)=nn(:,i);
@@ -284,6 +292,10 @@ function [x,defects]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt)
                 continue 
             end
 
+        n=t;
+        N = (4 * n - 3):(4 * n);
+        us(:, n) = u(:, n) + alpha * l(:, n) +  L(:, N) * (stato(:,t) - state_array(:, n));
+
             stato(:,t+1)=dynamics_rk4(stato(:,t),u(elem),dt);
         %   compute the forward dynamics to define the defects
 %             dy = ForwardDynamics(stato(:,t), u(elem));
@@ -294,13 +306,16 @@ function [x,defects]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt)
         if fine~=horizon_disc-1
         stato(:,t)=stato(:,t)*0;
         end
-
+        uss(:,:,i)=us(:,:);
         statess(:,:,i)=stato(:,:);
     end
 
     x=zeros(length(ix),horizon_disc);
+    u=zeros(length(u(:,1)),horizon_disc-1);
+
     for i=1:pieces
         x(:,:)=x(:,:)+statess(:,:,i);
+        u(:,:)=u(:,:)+uss(:,:,i);
     end
     defects=zeros(length(ix),horizon_disc);
     for i=1:pieces-1
