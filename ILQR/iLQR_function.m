@@ -42,7 +42,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
 
     state_array = zeros(n_states, horizon_disc);
     state_array(:, 1) = istate;
-    time_array = it:dt:(horizon + it);
+    time_array = it:dt:(horizon + it); %it = initial time; we go from initial time to horizon + initial time 
 
     for elem = 1:(horizon_disc - 1) %compute the forward dynamics to define the defects
         dy = ForwardDynamics(state_array(:, elem), u(elem));
@@ -57,7 +57,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     % defects=state_array(:,:) - state_d(:,:);
     defects = state_array(:, :) * 0;
     defects(:, end) = state_array(:, end) - state_d(:, end);
-    defects = circshift(defects, -1, 2);
+    defects = circshift(defects, -1, 2); %shiftiamo di uno all'indietro
     
     %start the optimizing iterations
     for iteration = 1:iterations - 1
@@ -79,7 +79,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
                 A = A_(:, N);
                 B = B_(:, n);
                 new_state_array(:,n+1) =  state_array(:, n + 1) ... % take the previous value
-                    + (A + B * L(:, N)) * (state_array(:, n)-new_state_array(:, n) ) ... %like add the control
+                    + (A + B * L(:, N)) * (new_state_array(:, n) - state_array(:, n)) ... %like add the control
                     +B* alpha* l(:, n) + (defects(:,n));
                 else
                 dy = ForwardDynamics(new_state_array(:, n), new_u(:, n));
@@ -190,7 +190,7 @@ function [L,l,A_,B_] =backward(n_states,horizon_disc,defects,state_array,state_d
     L = zeros(1, horizon_disc - 1 * n_states); %size depends both from the number of controls and states
     l = zeros(1, horizon_disc - 1); % size depends from the number of controls
     %Fill the S and s matrix
-    s(:, horizon_disc) = Qn * (defects(:, horizon_disc-1));
+    s(:, horizon_disc) = Qn * (defects(:, horizon_disc-1)); %oppure x_d - x?
     S(:, horizon_disc * 4 - 3:horizon_disc * 4) = Qn;
     A_ = zeros(n_states, (horizon_disc - 1) * n_states);
     B_ = zeros(n_states, horizon_disc - 1);
