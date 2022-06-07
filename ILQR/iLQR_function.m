@@ -12,7 +12,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
     R = 0.001;
     Qn = Q * 1000;
 
-    iterations = 10000;
+    iteratiofinal_state_ms = 10000;
     j_rm = 0.05;
 
     horizon = 3.99; %time S
@@ -59,8 +59,8 @@ function next_single_control = iLQR_function(istate, state_d, it)
     defects(:, end) = state_array(:, end) - state_d(:, end);
     defects = circshift(defects, -1, 2); %shiftiamo di uno all'indietro
     
-    %start the optimizing iterations
-    for iteration = 1:iterations - 1
+    %start the optimizing iteratiofinal_state_ms
+    for iteration = 1:iteratiofinal_state_ms - 1
 
         [L,l,A_,B_]=backward(n_states,horizon_disc,defects,state_array,state_d,u,Q,R,Qn);
 
@@ -75,7 +75,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
             for n = 1:horizon_disc - 1
                 N = (4 * n - 3):(4 * n);
                 new_u(:, n) = u(:, n) + alpha * l(:, n) +  L(:, N) * (new_state_array(:, n) - state_array(:, n));
-                if J<0
+                if J<100
                 A = A_(:, N);
                 B = B_(:, n);
                 new_state_array(:,n+1) =  state_array(:, n + 1) ... % take the previous value
@@ -94,7 +94,7 @@ function next_single_control = iLQR_function(istate, state_d, it)
                 % end
             end
             new_J=cost(new_state_array, state_d, new_u, Q, R, Qn);
-            if  all(isnan(new_u))
+            if  any(isnan(new_u))
                 alpha = alpha / 2;
                 % disp(alpha)
             else
@@ -102,9 +102,9 @@ function next_single_control = iLQR_function(istate, state_d, it)
             end
 
         end
-        %[new_state_array,defects] = forward_shoot(new_state_array(:, 1),horizon_disc,state_d,new_u,dt);
+        [new_state_array,defects] = forward_shoot(new_state_array(:, 1),horizon_disc,state_d,new_u,dt);
 
-        [new_state_array,defects]=forward_multi_shoot(new_state_array(:, 1),horizon_disc,new_state_array,state_d,new_u,dt);
+        %[new_state_array,defects]=forward_multi_shoot(new_state_array(:, 1),horizon_disc,new_state_array,state_d,new_u,dt);
 
         %plot before exit to understand what is happening
             tiledlayout(3, 1);
@@ -157,7 +157,7 @@ end
 
 
 
-%% AUXILIARY FUNCTIONS
+%% AUXILIARY FUNCTIOfinal_state_ms
 
 %% RK4 Dynamics
 function state = dynamics_rk4(state, u, dt)
@@ -202,7 +202,7 @@ function [L,l,A_,B_] =backward(n_states,horizon_disc,defects,state_array,state_d
         A = A_(:, N);
         B = B_(:, n);
 
-        %compute r,h,G,H to simplify S and s computations
+        %compute r,h,G,H to simplify S and s computatiofinal_state_ms
         P = 0; %repmat([0], [1, n_states]); %set mixed weight to zero delta_u*P*delta_x
         r = R * u(:, n); % the derivative of uRu
         q = Q * (state_array(:,n)-state_d(:,n));
@@ -252,10 +252,10 @@ function [x,defects]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt)
     [~, len] = size(x_approx);
     len = floor(len / pieces);
 
-    nn=zeros(4,pieces);
-    ns=nn;
+    initial_state_ms=zeros(4,pieces); %stato iniziale di ogni shooting
+    final_state_ms=initial_state_ms;              %stato finale
     for i=1:pieces
-        nn(:,i)=x_approx(:,len*(i-1)+1);
+        initial_state_ms(:,i)=x_approx(:,len*(i-1)+1);
     end
     statess=zeros(length(ix),horizon_disc,pieces);
     parfor i=1:pieces
@@ -263,7 +263,7 @@ function [x,defects]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt)
         stato=zeros(length(ix),horizon_disc);
         t=len*(i-1);
         t=t+(t==0);
-        stato(:,t)=nn(:,i);
+        stato(:,t)=initial_state_ms(:,i);
         % statess(:,i,t)=stato;
         if i==pieces %if is last piece do till the end
             fine=horizon_disc-1;
@@ -281,7 +281,7 @@ function [x,defects]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt)
 %             stato(:,t+1) = euler_integration_fun(stato(:,t), dy, dt);
             t=t+1;
         end
-        ns(:,i)=stato(:,t);
+        final_state_ms(:,i)=stato(:,t);
         if fine~=horizon_disc-1
         stato(:,t)=stato(:,t)*0;
         end
@@ -295,9 +295,9 @@ function [x,defects]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt)
     end
     defects=zeros(length(ix),horizon_disc);
     for i=1:pieces-1
-        defects(:, len*i) = ns(:,i)-nn(:, i+1) ;
+        defects(:, len*i) = final_state_ms(:,i)-initial_state_ms(:, i+1) ;
     end
-    defects(:, end) = ns(:,end) - state_d(:, end);
+    defects(:, end) = final_state_ms(:,end) - state_d(:, end);
 %     tiledlayout(1,1)
 %     nexttile
 %     plot(1:horizon_disc,x(:,:))
