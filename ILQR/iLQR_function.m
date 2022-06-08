@@ -78,7 +78,7 @@ function u = iLQR_function(istate, state_d, it,u)
             for n = 1:horizon_disc - 1
                 N = (4 * n - 3):(4 * n);
                 new_u(:, n) = u(:, n) + alpha * l(:, n) +  beta *L(:, N) * (new_state_array(:, n) - state_array(:, n));
-                if J<0
+                if J<180
                 A = A_(:, N);
                 B = B_(:, n);
                 new_state_array(:,n+1) = state_array(:, n + 1) ... % take the previous value
@@ -101,7 +101,6 @@ function u = iLQR_function(istate, state_d, it,u)
                 beta=beta/2; %or beta=0
                 alpha=alpha/2;
             else
-                beta=old_beta;
                 %alpha=old_alpha;
                 solution_found = true;
             end
@@ -109,7 +108,7 @@ function u = iLQR_function(istate, state_d, it,u)
         end
         %[new_state_array,defects,new_u] = forward_shoot(new_state_array(:, 1),horizon_disc,state_d,new_u,dt,L,l,state_array,alpha);
 
-        [new_state_array,defects,new_u]=forward_multi_shoot(new_state_array(:, 1),horizon_disc,new_state_array,state_d,new_u,dt,L,l,state_array,alpha);
+        [new_state_array,defects,new_u]=forward_multi_shoot(new_state_array(:, 1),horizon_disc,new_state_array,state_d,new_u,dt,L,l,state_array,alpha,beta);
 
         %plot before exit to understand what is happening
             tiledlayout(3, 1);
@@ -143,6 +142,7 @@ function u = iLQR_function(istate, state_d, it,u)
             J=new_J;
             u = new_u;
             alpha=alpha*2;
+            beta=old_beta;
         else
             alpha=alpha/2;
         end
@@ -255,7 +255,7 @@ function [x,defects,u] = forward_shoot(ix,horizon_disc,state_d,u,dt,L,l,state_ar
 end
 
 
-function [x,defects,u]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt,L,l,state_array,alpha)  
+function [x,defects,u]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,dt,L,l,state_array,alpha,beta)  
     ix=ix(:);
     if horizon_disc<40
         pieces=1;
@@ -294,7 +294,7 @@ function [x,defects,u]= forward_multi_shoot(ix,horizon_disc,x_approx,state_d,u,d
 
         n=t;
         N = (4 * n - 3):(4 * n);
-        us(:, n) = u(:, n) + alpha * l(:, n) +  L(:, N) * (stato(:,t) - state_array(:, n));
+        us(:, n) = u(:, n) + alpha * l(:, n) + beta* L(:, N) * (stato(:,t) - state_array(:, n));
 
             stato(:,t+1)=dynamics_rk4(stato(:,t),u(elem),dt);
         %   compute the forward dynamics to define the defects
