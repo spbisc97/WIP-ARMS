@@ -4,18 +4,10 @@ function main(Q, R, wclose)
         wclose = 0;
     end
     if nargin < 2
-        R=0.0001
+        R=0.0001;
     end
     if nargin <1
-        Q=diag([10,1,100,1])
-    end
-
-    if nargin < 2
-        R = 0.0001;
-    end
-
-    if nargin < 1
-        Q = diag([10, 1, 100, 1]);
+        Q=diag([10,1,100,1]);
     end
 
     if (wclose)
@@ -38,14 +30,15 @@ function main(Q, R, wclose)
     control_array = []; %array del controllo
     time_array = [t]; %array del tempo (dovrebbe coincidere con la l'array "time")
     y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
-    u_list=iLQR_function(y,traj_d(:,floor(t/dt):end),t,u);
     while t < tf-5
         %find u control
         y_des = traj_d(:, floor(t / dt));
-        u=u_list(floor(t / dt));
+        u_list=iLQR_function(y,traj_d(:,floor(t/dt):end),t,u);
         %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t);
         %u = LQR_function(y, y_des, Q, R);
         %save to plot
+        u=u_list(:,1);
+
 
 
         control_array = [control_array, u];
@@ -53,9 +46,7 @@ function main(Q, R, wclose)
         %compute dynamics
 
         
-
-        dy = ForwardDynamics(y, u);
-        y = euler_integration_fun(y, dy, dt);
+        y = dynamics_rk4(y, u, dt)
         state_array = [state_array, y];
         y_d_array = [y_d_array, y_des];
         t = t + dt; %time increment
@@ -88,50 +79,6 @@ function main(Q, R, wclose)
     control_array = []; %array del controllo
     time_array = [t]; %array del tempo (dovrebbe coincidere con la l'array "time")
     y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
-
-    while t < tf-5
-        %find u control
-        
-        y_des = traj_d(:, floor(t / dt));
-        u_list=iLQR_function(y,traj_d(:,floor(t/dt):end),t,u_list);
-        u=u_list(floor(t / dt));
-        [A, B] = linearization_discretization(u, y, 1);
-        %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t);
-        %u = LQR_function(y, y_des, Q, R);
-        %save to plot
-        y=A*y+B*u;
-
-
-
-        control_array = [control_array, u];
-
-        
-        state_array = [state_array, y];
-        y_d_array = [y_d_array, y_des];
-        t = t + dt; %time increment
-        time_array = [time_array, t];
-
-    end
-    figure(2)
-    tiledlayout(3, 1)
-    nexttile
-    plot(time_array, state_array)
-    hold on
-    plot(time_array, y_d_array)
-    legend("x", "dx", "phi", "dphi", "d-x", "d-dx", "d-phi", "d-dphi")
-    title("trajectory and desired trajectory")
-
-    nexttile
-    plot(time_array, y_d_array - state_array)
-    legend("x", "dx", "phi", "dphi")
-    title("error trajectory")
-
-    nexttile
-    plot(time_array, [control_array, 0])
-    title("controls")
-
-
-
 end
 
 function state = dynamics_rk4(state, u, dt)
