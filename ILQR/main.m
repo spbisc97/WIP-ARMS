@@ -16,7 +16,7 @@ function main(Q, R, wclose)
 
     clc;
     % global u;
-    u = 0;
+    u = [0,0];
     y = [0; 0; pi; 0]; %initial point
     t = 0.01; %initial time
     tf = 10; %final time
@@ -32,21 +32,22 @@ function main(Q, R, wclose)
     y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
     while t < tf-5
         %find u control
-        y_des = traj_d(:, floor(t / dt));
-        u_list=iLQR_function(y,traj_d(:,floor(t/dt):end),t,u);
+        t_disc=floor(t / dt);
+        y_des = traj_d(:, t_disc);
+        u=iLQR_function(y,traj_d(:,t_disc:end),t,u);
         %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t);
         %u = LQR_function(y, y_des, Q, R);
         %save to plot
-        u=u_list(:,1);
+        u_next=u(:,1);
 
 
 
-        control_array = [control_array, u];
+        control_array = [control_array, u_next];
 
         %compute dynamics
 
         
-        y = dynamics_rk4(y, u, dt)
+        y = dynamics_rk4(y, u_next, dt);
         state_array = [state_array, y];
         y_d_array = [y_d_array, y_des];
         t = t + dt; %time increment
