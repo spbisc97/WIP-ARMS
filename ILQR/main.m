@@ -24,7 +24,7 @@ function main(Q, R, wclose)
 
     time = t:dt:tf+dt; %time array
     %traj_d=-0.06*(time-1.7).^5+0.6; %desired trajectory
-    traj_d = repmat([0.2; 0; pi; 0], [1, (tf / dt)+1]);
+    traj_d = repmat([1; 0; pi; 0], [1, (tf / dt)+1]);
     %traj_d(1,:)=-sin(time/2); %desired trajectory
     state_array = [y]; %array degli stati
     control_array = []; %array del controllo
