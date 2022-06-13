@@ -9,14 +9,14 @@ function u = iLQR_function(istate, state_d, it, u)
     Q = eye(n_states) * 0.1;
     Q(1, 1) = 5;
     Q(3, 3) = 1;
-    R = 0.1;
+    R = 0.01;
     Qn = Q * 1000;
 
     iterations = 10000;
     bad_iterations=0;
     j_rm = 0.001;
 
-    horizon = 3; %time S
+    horizon = 5; %time S
     horizon_disc = floor(horizon / dt) + 1;
     defects_max = ones(n_states, 1) * 0.5; %difetti massimi per cui validare i controlli
     defects_max(1, 1) = 0.2;
@@ -36,7 +36,7 @@ function u = iLQR_function(istate, state_d, it, u)
     %*check and fix control lenght
     [~, usz] = size(u); 
     u = [u(:, 2:end), zeros(n_controls, (horizon_disc - 1) - (usz - 1))];
-    
+    u=u*0;
     state_array = ones(1, horizon_disc).*istate;
     new_u = u;
 
@@ -46,13 +46,13 @@ function u = iLQR_function(istate, state_d, it, u)
 
     % !finished initialization
     
-    for elem = 1:(horizon_disc - 1) %compute the forward dynamics to define the defects
-        state_array(:, elem + 1)=dynamics_euler(state_array(:,elem),u(:,elem),dt);
-    end
+%     for elem = 1:(horizon_disc - 1) %compute the forward dynamics to define the defects
+%         state_array(:, elem + 1)=dynamics_euler(state_array(:,elem),u(:,elem),dt);
+%     end
 
     
-    L = zeros(1, horizon_disc - 1 * n_states); %size depends both from the number of controls and states
-    l = zeros(1, horizon_disc - 1); % size depends from the number of controls
+    L = zeros(1, horizon_disc  * n_states); %size depends both from the number of controls and states
+    l = zeros(1, horizon_disc ); % size depends from the number of controls
     [state_array, defects, u ]= forward_multi_shoot(horizon_disc,state_array, u, dt,state_array,L,l);
 
     J = cost(state_array, state_d, new_u, Q, R, Qn);
@@ -70,7 +70,8 @@ function u = iLQR_function(istate, state_d, it, u)
         [new_state_array, new_u] = forward_linear_shoot(horizon_disc,state_array, u, dt, L, l, defects,A_,B_,new_J);
         
         %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"linear")
-        plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"linear")
+        
+        %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"linear")
 
         %pause
 
@@ -89,7 +90,8 @@ function u = iLQR_function(istate, state_d, it, u)
 
         %plot before exit to understand what is happening
         %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"multi")
-        plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi")
+        
+        %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi")
 
         %pause
         %calculate new costs
@@ -105,18 +107,22 @@ function u = iLQR_function(istate, state_d, it, u)
         T = table(new_J, old_new_J, J, relative,bad_iterations, 'VariableNames', {'new_cost', 'prev_new_cost', 'prev_min_cost', 'relative','last bad'});
         disp(T)
 
+    
+
         if all(~isnan(new_J)) && (J > new_J || relative < j_rm) %&& J ~= new_J
             state_array = new_state_array;
             J = new_J;
             u = new_u;
        
         end
+
+        if bad_iterations > 7 
+            relative=0;
+            defects_max=defects_max*10;
+        end
         if (((relative < j_rm)) && all((sum(defects,2)) < defects_max))
 
             plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"final")
-            pause
-            %plot_xu(state_array, u, time_array, ["x", "dx", "phi", "dphi"],state_d,[1,3;2,4])
-
 
             return
         end
@@ -216,7 +222,7 @@ function [x, u] = forward_linear_shoot(horizon_disc,x_old, u, dt, L, l,  defects
         N = (4 * n - 3):(4 * n);
         u(:, n) = u(:, n) + l(:, n) + L(:, N) * (x(:, n) - x_old(:, n));
         
-        if J < 0
+        if J < 1e4
             A = A_(:, N);
             B = B_(:, n);
             x(:, n + 1) = x_old(:, n + 1) ... % take the previous value
@@ -242,7 +248,7 @@ function [x, defects, u] = forward_multi_shoot(horizon_disc,x, u, dt,x_old, L, l
     if horizon_disc < 40
         pieces = 1;
     else
-        pieces = 4;
+        pieces = 60;
     end
 
     [~, len] = size(x);
@@ -279,7 +285,6 @@ function [x, defects, u] = forward_multi_shoot(horizon_disc,x, u, dt,x_old, L, l
         for elem = inizio:fine
             n = t;
             N = (4 * n - 3):(4 * n);
-            L(:, N)
             us(:, n) = u(:, n) +(l(:, n) + L(:, N) * (stato(:, t) - x_old(:, n)));
             stato(:, t + 1) = dynamics_rk4(stato(:, t), us(elem), dt);
             t = t + 1;
