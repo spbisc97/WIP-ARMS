@@ -2,27 +2,29 @@ function u = iLQR_function(istate, state_d, it, u)
     %global u %use global u to remember last optimized values
     dt = 0.01; %delta t for integration
     [n_states, sz] = size(state_d);
-    n_controls = 1;
+    n_controls = 1;    
 
 
     %*define Q,R,Qn matrix
     Q = eye(n_states) * 0.01;
-    Q(1, 1) = 3;
+    Q(1, 1) = 1;
     Q(3, 3) = 1;
     R = 0.001;
-    Qn = Q*100;
+    Qn = Q*1;
 
-    iterations = 10000;
+    iterations = 100000;
+    plot_step=10;
     bad_iterations=0;
     j_rm = 0.01;
 
-    horizon = 3; %time S
+    horizon = 6; %time S
     horizon_disc = floor(horizon / dt) + 1;
-    defects_max = ones(n_states, 1) * 0.2; %difetti massimi per cui validare i controlli
-%     defects_max(1, 1) = 0.2;
-%     defects_max(3, 1) = 0.2;
-%     defects_max(2, 1) = 0.;
-%     defects_max(4, 1) = 40;
+    defects_max = ones(n_states, 1) ; %difetti massimi per cui validare i controlli
+        defects_max(1, 1) = 0.01;
+        defects_max(3, 1) = 0.01;
+        defects_max(2, 1) = 0.2;
+        defects_max(4, 1) = 0.2;
+    %defects_max=defects_max*2 
 
     %* find real horizon
     if horizon_disc > (sz)
@@ -34,117 +36,106 @@ function u = iLQR_function(istate, state_d, it, u)
     state_d = state_d(:, 1:horizon_disc);
 
     %*check and fix control lenght
-    [~, usz] = size(u); 
+    [~, usz] = size(u);
     u = [u(:, 2:end), zeros(n_controls, (horizon_disc - 1) - (usz - 1))];
-    u=u*0;
+    % u=u*0; reset suggested controls
     state_array = ones(1, horizon_disc).*istate;
     new_u = u;
-
-    beta=1;
-
-    defects = state_array(:, :) * 0;
-
     alpha = 1;
+    lmb=1;
     time_array = it:dt:(horizon + it);
 
     % !finished initialization
-    
-%     for elem = 1:(horizon_disc - 1) %compute the forward dynamics to define the defects
-%         state_array(:, elem + 1)=dynamics_euler(state_array(:,elem),u(:,elem),dt);
-%     end
 
-    
+    %     for elem = 1:(horizon_disc - 1) %compute the forward dynamics to define the defects
+    %         state_array(:, elem + 1)=dynamics_euler(state_array(:,elem),u(:,elem),dt);
+    %     end
+
+
     L = zeros(1, horizon_disc  * n_states); %size depends both from the number of controls and states
     l = zeros(1, horizon_disc ); % size depends from the number of controls
     [state_array, defects, u ]= forward_multi_shoot(horizon_disc,state_array, u, dt,state_array,L,l);
 
-    plot_xu([state_array;defects], u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi")
+    %plot_xu([state_array;defects], u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi start")
 
     J = cost(state_array, state_d, new_u, Q, R, Qn)*1e3;
     new_J = J;
     disp("J")
     disp(J)
 
-    % defects=state_array(:,:) - state_d(:,:);
-    
 
     %start the optimizing iterations
     for iteration = 1:iterations - 1
         [L, l, A_, B_] = backward(n_states, horizon_disc, defects, state_array, state_d, u, Q, R, Qn);
 
-        [new_state_array, new_u] = forward_linear_shoot(horizon_disc,state_array, u, dt, L, alpha*l, defects,A_,B_,new_J);
-        
-        %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"linear")
-        
-        plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"linear")
-        
-        %pause
+        [new_state_array, new_u] = forward_linear_shoot(horizon_disc,state_array, u, dt, lmb*L, alpha*l, defects,A_,B_,new_J);
 
-        % if any(isnan(new_u)) || any(any(new_state_array > [1e8; 1e8; 1e8; 1e8]))
-        %     old_beta = beta;
-        %     beta = beta / 2; %or beta=0
-        %     alpha = alpha / 2;
-        % else
-        %     %alpha=old_alpha;
-        %     solution_found = true;
-        % end
+        %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"linear")
+                if mod(iteration,plot_step)==0
+
+        plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"linear")
+                end
 
         %[new_state_array,new_u] = forward_shoot(new_state_array(:, 1),horizon_disc,new_u,dt,L,l,state_array);
 
-        [new_state_array, defects, new_u] = forward_multi_shoot(horizon_disc, new_state_array, new_u, dt,state_array, L, alpha/2*l);
+        [new_state_array, new_defects, new_u] = forward_multi_shoot(horizon_disc, new_state_array, new_u, dt,state_array, lmb*L, alpha*l);
 
         %plot before exit to understand what is happening
         %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"multi")
-        
-        plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi")
-
+        if mod(iteration,plot_step)==0
+        plot_xu([new_state_array;new_defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi")
+        end
         %pause
         %calculate new costs
         old_new_J = new_J;
         new_J = cost(new_state_array, state_d, new_u, Q, R, Qn);
 
         relative = abs(new_J - J) / new_J;
-        if ~any(isnan(new_J)) && J > new_J
+        if ~isnan(new_J) && ~isinf(new_J)   && (J > new_J)
             bad_iterations=0;
         else
             bad_iterations=bad_iterations+1;
         end
-        T = table(new_J, old_new_J, J, relative,bad_iterations, 'VariableNames', {'new_cost', 'prev_new_cost', 'prev_min_cost', 'relative','last bad'});
+        T = table(new_J, old_new_J, J,max(sum(abs(new_defects),2)), relative,bad_iterations,alpha, 'VariableNames', {'new_cost', 'prev_new_cost', 'prev_min_cost', 'max(sum(def))','relative','last bad','alpha'});
+
         disp(T)
 
-    
 
-        if all(~isnan(new_J)) && (J > new_J) %&& J ~= new_J
+
+        if bad_iterations==0
             state_array = new_state_array;
             J = new_J;
             u = new_u;
-%         else %Following what the paper suggests
-%             state_array = new_state_array;
-%             J = new_J;
-%             u = new_u;
-           
-        end
-    
-
-        if bad_iterations > 1
-            alpha=alpha;
-        else
+            defects=new_defects;
             alpha=1;
-        end
-        if bad_iterations > 8
-            %j_rm=j_rm*2;
-            %defects_max=defects_max*2;
-            beta=1;
+            lmb=1;
         else
-            beta=1;
+            if ~isnan(new_J) && ~isinf(new_J)
+                alpha=alpha/2;
+                lmb=1;
+                state_array = new_state_array;
+                J = new_J;
+                u = new_u;
+                defects=new_defects;
+            else
+            alpha=alpha/2;
+            lmb=1;
+                continue
+            end
         end
-        if (((relative < j_rm)) && all((sum(defects,2)) < defects_max))
 
-            plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"final")
-            pause
+
+        if bad_iterations > 20
+            relative=0;
+
+        else
+        end
+        if (((relative < j_rm)) && all((sum(abs(new_defects),2)) < defects_max))
+
+            plot_xu([state_array;defects], u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"final")
             return
         end
-        
+
 
     end
 
@@ -192,7 +183,7 @@ function [L, l, A_, B_] = backward(n_states, horizon_disc, defects, x, xd, u, Q,
     %back
     for n = (horizon_disc - 1):-1:1
         N = (4 * n - 3):(4 * n);
-        [A_(:, N), B_(:, n)] = linearization_discretization(u(:, n), x(:, n), 1); %maybe discrete
+        [A_(:, N), B_(:, n)] = linearization_discretization(u(:, n), x(:, n), 1);
         A = A_(:, N);
         B = B_(:, n);
 
@@ -238,15 +229,16 @@ function [x, u] = forward_linear_shoot(horizon_disc,x_old, u, dt, L, l,  defects
 
     for n = 1:horizon_disc - 1
         N = (4 * n - 3):(4 * n);
-        u(:, n) = u(:, n) + l(:, n) + L(:, N) * (x(:, n) - x_old(:, n));
-        
-        if J < 100000000
+        c=~all(defects(:, n)==0);
+        %u(:, n) = u(:, n) + c*(l(:, n) + L(:, N) * (x(:, n) - x_old(:, n)));
+
+        if J < 1e8
             A = A_(:, N);
             B = B_(:, n);
-            x(:, n + 1) = x_old(:, n + 1) ... % take the previous value
-                + (A + B * L(:, N)) * (x(:, n) - x_old(:, n)) ... %like add the control
-                +B * l(:, n) + (defects(:, n));
-                
+            x(:, n + 1) = x_old(:, n + 1)+(defects(:, n))... % take the previous value
+                +c*((A + B * L(:, N)) * (x(:, n) - x_old(:, n)) ... %like add the control
+                +B * l(:, n));
+
         else
             x(:, n + 1) = dynamics_euler(x(:, n), u(:, n), dt);
         end
@@ -257,18 +249,18 @@ end %function
 %% Forward Multi Shoot
 
 function [x, defects, u] = forward_multi_shoot(horizon_disc,x, u, dt,x_old, L, l)
-    
-    
+
+
     %closedloop=0;
-    
+
     n_states=length(x(:,1));
     n_controls=length(u(:,1));
     if horizon_disc < 3
         pieces = 1;
         k=1;
     else
-        pieces = 8;
-        %k=2.^(-1:-1:-pieces);
+        pieces = 16;
+        %k=2.^(0:-0.1:(-pieces+1)/10);
         k=ones(1,pieces)*1;
     end
 
@@ -285,8 +277,9 @@ function [x, defects, u] = forward_multi_shoot(horizon_disc,x, u, dt,x_old, L, l
     statess = zeros(n_states, horizon_disc, pieces);
     uss = zeros(n_controls, horizon_disc - 1, pieces);
 
-    
-    for i = 1:pieces
+
+
+    parfor i = 1:pieces
 
         stato = zeros(n_states, horizon_disc);
         us = zeros(n_controls, horizon_disc - 1);
@@ -302,7 +295,7 @@ function [x, defects, u] = forward_multi_shoot(horizon_disc,x, u, dt,x_old, L, l
         else
             fine = len * (i);
         end
-                %len(i-1)+1:len(i):
+        %len(i-1)+1:len(i):
         for elem = inizio:fine
             n = t;
             N = (4 * n - 3):(4 * n);
@@ -332,10 +325,9 @@ function [x, defects, u] = forward_multi_shoot(horizon_disc,x, u, dt,x_old, L, l
     defects = zeros(n_states, horizon_disc);
 
     for i = 1:1:pieces - 1
-        defects(:, len * i +1) = (x_arrive(:, i) - x_start(:, i + 1));
+        defects(:, len*i+1) = (x_arrive(:, i) - x_start(:, i + 1));
     end
-
-    %defects(:, end) = ns(:, end) - state_d(:, end);
+    %defects(:, end) = x_arrive(:, end) - state_d(:, end);
     defects = circshift(defects, -1, 2);
 end %function
 
@@ -344,10 +336,13 @@ end %function
 
 function plot_xu(x, u, time_array, names,xd,order,type)
     %plot_xu(x, u, time_array, names,xd,order)
+    if type==""
+        return
+    end
     if nargin < 3
         error("missing entries")
     end
-     [h,~]=size(x);
+    [h,~]=size(x);
     if nargin < 4
         names = repmat("", 1, h);
     end
@@ -370,7 +365,7 @@ function plot_xu(x, u, time_array, names,xd,order,type)
         nexttile
         j=1;
         lgd=[];
-        while j<=l && ~isnan(order(i,j)) 
+        while j<=l && ~isnan(order(i,j))
             idx=order(i,j);
             plot(time_array, x(idx, :))
             hold on
@@ -379,18 +374,20 @@ function plot_xu(x, u, time_array, names,xd,order,type)
                 plot(time_array, xd(idx, :),LineStyle="--")
                 hold on
                 lgd=[lgd,names(idx)+"_d"];%#ok
-            end 
+            end
             title(type)
 
             j=j+1;
         end
         legend(lgd);
-        
+
     end
 
     nexttile
     plot(time_array(1:end - 1), u)
     legend("controls")
+    title(type)
+
     pause(1e-4)
     set(gcf,'Name',type,'NumberTitle','off')
 end %function

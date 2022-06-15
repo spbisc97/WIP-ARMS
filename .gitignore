@@ -2,3 +2,4 @@
 *.xopp
 .DS_Store
 *.mat
+.fuse_hidden*
