@@ -17,13 +17,13 @@ function u = iLQR_function(istate, state_d, it, u)
     bad_iterations=0;
     j_rm = 0.01;
 
-    horizon = 6; %time S
+    horizon = 5.7; %time S
     horizon_disc = floor(horizon / dt) + 1;
     defects_max = ones(n_states, 1) ; %difetti massimi per cui validare i controlli
         defects_max(1, 1) = 0.01;
         defects_max(3, 1) = 0.01;
-        defects_max(2, 1) = 0.2;
-        defects_max(4, 1) = 0.2;
+        defects_max(2, 1) = 0.02;
+        defects_max(4, 1) = 0.02;
     %defects_max=defects_max*2 
 
     %* find real horizon
@@ -229,7 +229,7 @@ function [x, u] = forward_linear_shoot(horizon_disc,x_old, u, dt, L, l,  defects
 
     for n = 1:horizon_disc - 1
         N = (4 * n - 3):(4 * n);
-        c=~all(defects(:, n)==0);
+        c=1;%c=all(defects(:, n)==0);
         %u(:, n) = u(:, n) + c*(l(:, n) + L(:, N) * (x(:, n) - x_old(:, n)));
 
         if J < 1e8
