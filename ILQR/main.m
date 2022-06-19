@@ -34,8 +34,8 @@ function main(Q, R, wclose)
         %find u control
         t_disc=floor(t / dt);
         y_des = traj_d(:, t_disc);
-        u=iLQR_function(y,traj_d(:,t_disc:end),t,u);
-        %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t);
+        u = iLQR_function(y,traj_d(:,t_disc:end),t,u);
+        %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t,u);
         %u = LQR_function(y, y_des, Q, R);
         %save to plot
         u_next=u(:,1);
