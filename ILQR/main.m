@@ -72,14 +72,6 @@ function main(Q, R, wclose)
     nexttile
     plot(time_array, [control_array, 0])
     title("controls")
-
-
-    y = [0; 0; pi; 0]; %initial point
-    t = 0.01; %initial time
-    state_array = [y]; %array degli stati
-    control_array = []; %array del controllo
-    time_array = [t]; %array del tempo (dovrebbe coincidere con la l'array "time")
-    y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
 end
 
 function state = dynamics_rk4(state, u, dt)
