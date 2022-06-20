@@ -24,6 +24,8 @@ classdef CartPend
         end
 
         function dy = ForwardDynamics(y, u)
+            u=u(:);
+            y=y(:);
 
             m = 1;
         M = 5;
