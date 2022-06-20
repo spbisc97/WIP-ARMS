@@ -176,13 +176,13 @@ function [L, l, A_, B_] = backward(n_states, horizon_disc, defects, x, xd, u, Q,
     l = zeros(1, horizon_disc - 1); % size depends from the number of controls
     %Fill the S and s matrix
     s(:, horizon_disc) = Qn * (x(:, horizon_disc) - xd(:, horizon_disc));
-    S(:, horizon_disc * 4 - 3:horizon_disc * 4) = Qn;
+    S(:, horizon_disc * n_states - (n_states-1):horizon_disc * n_states) = Qn;
     A_ = zeros(n_states, (horizon_disc - 1) * n_states);
     B_ = zeros(n_states, horizon_disc - 1);
 
     %back
     for n = (horizon_disc - 1):-1:1
-        N = (4 * n - 3):(4 * n);
+        N = (n_states * n - (n_states-1)):(n_states * n);
         [A_(:, N), B_(:, n)] = linearization_discretization(u(:, n), x(:, n), 1);
         A = A_(:, N);
         B = B_(:, n);
@@ -191,14 +191,14 @@ function [L, l, A_, B_] = backward(n_states, horizon_disc, defects, x, xd, u, Q,
         P = 0; %repmat([0], [1, n_states]); %set mixed weight to zero delta_u*P*delta_x
         r = R * u(:, n); % the derivative of uRu
         q = Q * (x(:, n) - xd(:, n));
-        h = r + B.' * (s(:, n + 1) + S(:, N + 4) * (defects(:, n))); %gu + S(:, N + 4) * defects(:, n+1)
-        G = P + B.' * S(:, N + 4) * A; %Gux
-        H = R + B.' * S(:, N + 4) * B; %Guu
+        h = r + B.' * (s(:, n + 1) + S(:, N + n_states) * (defects(:, n))); %gu + S(:, N + 4) * defects(:, n+1)
+        G = P + B.' * S(:, N + n_states) * A; %Gux
+        H = R + B.' * S(:, N + n_states) * B; %Guu
         L(:, N) = -pinv(H) * G; %K
         l(:, n) = -pinv(H) * h; %d
 
-        Gxx = Q + A.' * S(:, N + 4) * A;
-        gx = q + A' * (s(:, n + 1) + S(:, N + 4) * (defects(:, n)));
+        Gxx = Q + A.' * S(:, N + n_states) * A;
+        gx = q + A' * (s(:, n + 1) + S(:, N + n_states) * (defects(:, n)));
 
         % Gxu = G';
         % Gux = G;
@@ -212,10 +212,10 @@ end %function
 
 %% Forward Shoot
 function [x,u] = forward_shoot(ix, horizon_disc, u, dt, L, l, x_old)
-
+    n_states=lenght(ix);
     x = repmat(ix, 1, horizon_disc);
     for n = 1:horizon_disc - 1
-        N = (4 * n - 3):(4 * n);
+        N = (n_states * n - (n_states-1)):(n_states* n);
         u(:, n) = u(:, n) + l(:, n) + L(:, N) * (x(:, n) - x_old(:, n));
 
         x(:, n + 1) = dynamics_rk4(x(:, n), u(n), dt);
@@ -225,10 +225,13 @@ end %function
 %% Forward Linear Shoot
 function [x, u] = forward_linear_shoot(horizon_disc,x_old, u, dt, L, l,  defects,A_,B_,J)
     x = x_old;
+    [n_states,~]=size(x);
+
+
     %x(:, 1) = ix; %initial state
 
     for n = 1:horizon_disc - 1
-        N = (4 * n - 3):(4 * n);
+        N = (n_states * n - (n_states-1)):(n_states * n);
         c=1;%c=all(defects(:, n)==0);
         %u(:, n) = u(:, n) + c*(l(:, n) + L(:, N) * (x(:, n) - x_old(:, n)));
 
@@ -298,7 +301,7 @@ function [x, defects, u] = forward_multi_shoot(horizon_disc,x, u, dt,x_old, L, l
         %len(i-1)+1:len(i):
         for elem = inizio:fine
             n = t;
-            N = (4 * n - 3):(4 * n);
+            N = (n_states * n - (n_states-1)):(n_states * n);
             us(:, n) = u(:, n) +(k(i)*l(:, n)+  L(:, N) * (stato(:, t) - x_old(:, n)));
             stato(:, t + 1) = dynamics_rk4(stato(:, t), us(elem), dt);
             t = t + 1;
