@@ -6,23 +6,20 @@ function u = iLQR_function(istate, state_d, it, u)
 
     %*define Q,R,Qn matrix
     Q = eye(n_states) * 0.01;
-    Q(1, 1) = 1;
-    Q(3, 3) = 1;
+    Q(1, 1) = 5;
+    Q(3, 3) = 10;
     R = 0.001;
-    Qn = Q * 1;
+    Qn = Q ;
 
     iterations = 100000;
-    plot_step = 4;
+    plot_step = 10;
     bad_iterations = 0;
-    j_rm = 0.01;
+    j_rm = 0.0001;
 
-    horizon = 5.7; %time S
+    horizon = 10; %time S
     horizon_disc = floor(horizon / dt) + 1;
-    defects_max = ones(n_states, 1)*0.02; %difetti massimi per cui validare i controlli
-    defects_max(1, 1) = 0.01;
-    defects_max(3, 1) = 0.01;
-    defects_max(2, 1) = 0.02;
-    defects_max(4, 1) = 0.02;
+    defects_max = ones(n_states, 1)*0.0001; %difetti massimi per cui validare i controlli
+
     %defects_max=defects_max*2
 
     %* find real horizon
@@ -105,7 +102,7 @@ function u = iLQR_function(istate, state_d, it, u)
             bad_iterations = bad_iterations + 1;
         end
 
-        T = table(new_J, old_new_J, J, max(sum(abs(new_defects), 2)), relative, bad_iterations, alpha, 'VariableNames', {'new_cost', 'prev_new_cost', 'prev_min_cost', 'max(sum(def))', 'relative', 'last bad', 'alpha'});
+        T = table(new_J, J, max(sum(abs(new_defects), 2)), relative, bad_iterations, alpha, 'VariableNames', {'new_cost', 'prev_cost', 'max(sum(def))', 'relative', 'last bad', 'alpha'});
 
         disp(T)
 
@@ -220,13 +217,11 @@ end %function
 
 %% Forward Shoot
 function [x, u] = forward_shoot(ix, horizon_disc, u, dt, L, l, x_old)
-    n_states = lenght(ix);
+    n_states = length(ix);
     x = repmat(ix, 1, horizon_disc);
     for n = 1:horizon_disc - 1
-        N = (n_states * n - (n_states - 1)):(n_states * n);
-        u(:, n) = u(:, n) + l(:, n) + L(:, N) * (x(:, n) - x_old(:, n));
-
-        x(:, n + 1) = dynamics_rk4(x(:, n), u(n), dt);
+        u(:, n) = u(:, n) + l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n));
+        x(:, n + 1) = dynamics_rk4(x(:, n), u(:,n), dt);
     end
 end %function
 
@@ -400,11 +395,13 @@ function plot_xu(x, u, time_array, names, xd, order, type)
         legend(lgd);
 
     end
+    xl = xlim;
 
     nexttile
     plot(time_array(1:end - 1), u)
     legend("controls")
     title(type)
+    xlim(xl);
 
     pause(1e-4)
     set(gcf, 'Name', type, 'NumberTitle', 'off')
