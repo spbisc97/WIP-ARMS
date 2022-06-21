@@ -7,7 +7,7 @@ function u = iLQR_DDP_function(istate, state_d, it,u)
     Q = eye(n_states) * 0.01;
     Q(1, 1) = 1;
     Q(3, 3) = 1;
-    R = 0.01;
+    R = 0.001;
     alpha=0.5;
 
     horizon = 10; %time S
@@ -87,8 +87,10 @@ function u = iLQR_DDP_function(istate, state_d, it,u)
             d(:, n) = pinv(Guu) * gu; %d
             L(:, N) = pinv(Guu) * Gux; %K
 
-            s(:, n) = gx - L(:, N).' * gu + L(:, N).' * Guu * d(:, n) - Gxu * d(:, n);
             S(:, N) = Gxx + L(:, N).' * Guu * L(:, N) - Gxu * L(:, N) - L(:, N).' * Gux;
+            s(:, n) = gx - L(:, N).' * gu  - Gxu * d(:, n);
+
+            %s(:, n) = gx - L(:, N).' * gu - L(:, N).' * Guu * d(:, n) - Gxu * d(:, n);
 
             % dJ = dJ + gu' * d(:, n);
 

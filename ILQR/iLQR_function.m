@@ -9,15 +9,15 @@ function u = iLQR_function(istate, state_d, it, u)
     Q = eye(n_states) * 0.01;
     Q(1, 1) = 1;
     Q(3, 3) = 1;
-    R = 0.001;
-    Qn = Q*1;
+    R = 0.0001;
+    Qn = Q*100;
 
     iterations = 100000;
-    plot_step=10;
+    plot_step=1;
     bad_iterations=0;
-    j_rm = 0.01;
+    j_rm = 0.0001;
 
-    horizon = 5.7; %time S
+    horizon =15; %time S
     horizon_disc = floor(horizon / dt) + 1;
     defects_max = ones(n_states, 1) ; %difetti massimi per cui validare i controlli
         defects_max(1, 1) = 0.01;
@@ -34,7 +34,6 @@ function u = iLQR_function(istate, state_d, it, u)
 
     %*define desidered state in the horizon we have
     state_d = state_d(:, 1:horizon_disc);
-
     %*check and fix control lenght
     [~, usz] = size(u);
     u = [u(:, 2:end), zeros(n_controls, (horizon_disc - 1) - (usz - 1))];
@@ -232,8 +231,9 @@ function [x, u] = forward_linear_shoot(horizon_disc,x_old, u, dt, L, l,  defects
 
     for n = 1:horizon_disc - 1
         N = (n_states * n - (n_states-1)):(n_states * n);
-        c=1;%c=all(defects(:, n)==0);
-        %u(:, n) = u(:, n) + c*(l(:, n) + L(:, N) * (x(:, n) - x_old(:, n)));
+        c=1;
+        %c1=~all(defects(:, n)==0);
+        %u(:, n) = u(:, n) + c1*(l(:, n) + 0*L(:, N) * (x(:, n) - x_old(:, n)));
 
         if J < 1e8
             A = A_(:, N);
