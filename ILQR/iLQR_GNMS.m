@@ -438,8 +438,8 @@ classdef iLQR_GNMS
 
             nexttile
             plot(time_array(1:end - 1), u)
-            legend("controls",'Location','northeastoutside')
-            title(type)
+            %legend("controls",'Location','northeastoutside')
+            title(type+"   controls")
             xlim(xl);
             grid minor
 

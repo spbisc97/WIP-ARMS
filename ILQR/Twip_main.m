@@ -25,14 +25,18 @@ function Twip_main(Q, R, wclose)
     time = t:dt:tf+dt; %time array
     %traj_d=-0.06*(time-1.7).^5+0.6; %desired trajectory
     traj_d = repmat([0; 0; 1; 0;0;0], [1, (tf / dt)+1]);
-    %traj_d(5,:)=-2*sin(time); %desired trajectory
+    traj_d(5,:)=-2*sin(time); %desired trajectory
     state_array = [y]; %array degli stati
     control_array = []; %array del controllo
     time_array = [t]; %array del tempo (dovrebbe coincidere con la l'array "time")
     y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
     il=iLQR_GNMS(Twip(),Q,R,Q);
-    il.order=[1,2,nan,nan,nan,nan;2,3,nan,nan,nan,nan;5,6,nan,nan,nan,nan;7,8,9,10,11,12];
-    
+    il.order=[1,2,nan,nan,nan,nan;3,4,nan,nan,nan,nan;5,6,nan,nan,nan,nan;7,8,9,10,11,12];
+    il.names=["phi","dphi","x" "dx", "theta","dtheta"];
+
+    il.plot_steps=3;
+    il.plot_start=true;
+    il.plot_end=true;
     
     while t < tf-5
         %find u control
