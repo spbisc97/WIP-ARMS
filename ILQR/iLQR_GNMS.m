@@ -374,9 +374,11 @@ classdef iLQR_GNMS
 
             [h, ~] = size(x);
 
-            if nargin < 4 || isempty(names)
-                names =1:h; %repmat("", 1, h);
+            if nargin < 4 || isempty(names) || length(names)<h
+                init=length(names)+1;
+                names =[names,init:h]; %repmat("", 1, h);
             end
+
 
             desired = true;
 
@@ -425,7 +427,7 @@ classdef iLQR_GNMS
 
 
                 end
-                legend(lgd,'Location','northeastoutside');
+                legend(lgd,'Location','northeastoutside'); %interpreter =latex
                 ylim('padded')
                 xlim([-inf time_array(end)]);
                 grid minor
