@@ -174,9 +174,9 @@ classdef iLQR_GNMS
                 end
 
                 if (((relative < j_rm)) && all((sum(abs(new_defects), 2)) < obj.defects_max))
-if obj.plot_end
-                    obj.plot_xu([new_state_array; defects], new_u, time_array, obj.names, state_d, obj.order, "final")
-end
+                    if obj.plot_end
+                        obj.plot_xu([new_state_array; defects], new_u, time_array, obj.names, state_d, obj.order, "final")
+                    end
                     return
                 end
 
@@ -263,16 +263,16 @@ end
                 c = 1; %c=all(defects(:, n)==0);
                 %u(:, n) = u(:, n) + c*(l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n)));
 
-%                 if J < 1e8
-                    A = A_(:, :,n);
-                    B = B_(:, :,n);
-                    x(:, n + 1) = x_old(:, n + 1) + (defects(:, n)) ... % take the previous value
-                        +c * ((A + B * L(:, :,n)) * (x(:, n) - x_old(:, n)) ... %like add the control
-                        +B * l(:, n));
+                %                 if J < 1e8
+                A = A_(:, :,n);
+                B = B_(:, :,n);
+                x(:, n + 1) = x_old(:, n + 1) + (defects(:, n)) ... % take the previous value
+                    +c * ((A + B * L(:, :,n)) * (x(:, n) - x_old(:, n)) ... %like add the control
+                    +B * l(:, n));
 
-%                 else
-%                     x(:, n + 1) = obj.dynamics_euler(x(:, n), u(:, n), dt);
-%                 end
+                %                 else
+                %                     x(:, n + 1) = obj.dynamics_euler(x(:, n), u(:, n), dt);
+                %                 end
             end
 
         end %function
