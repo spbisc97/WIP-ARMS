@@ -7,18 +7,20 @@ function u = iLQR_function(istate, state_d, it, u)
     %*define Q,R,Qn matrix
     Q = eye(n_states) * 0.01;
     Q(1, 1) = 5;
-    Q(3, 3) = 10;
-    R = 0.001;
+    Q(3, 3) = 1;
+    Q(5, 5) = 1;
+    
+    R = diag([0.01,0.01]);
     Qn = Q ;
 
     iterations = 100000;
-    plot_step = 10;
+    plot_step = 1;
     bad_iterations = 0;
     j_rm = 0.0001;
 
     horizon = 10; %time S
     horizon_disc = floor(horizon / dt) + 1;
-    defects_max = ones(n_states, 1)*0.0001; %difetti massimi per cui validare i controlli
+    defects_max = ones(n_states, 1)*0.00001; %difetti massimi per cui validare i controlli
 
     %defects_max=defects_max*2
 
@@ -40,7 +42,7 @@ function u = iLQR_function(istate, state_d, it, u)
     alpha = 1;
     lmb = 1;
     time_array = it:dt:(horizon + it);
-    %order=[1,2,nan,nan,nan,nan;2,3,nan,nan,nan,nan;5,6,nan,nan,nan,nan;7,8,9,10,11,12];
+    order=[1,2,nan,nan,nan,nan;2,3,nan,nan,nan,nan;5,6,nan,nan,nan,nan;7,8,9,10,11,12];
 
     % !finished initialization
 
@@ -52,8 +54,8 @@ function u = iLQR_function(istate, state_d, it, u)
     l = zeros(n_controls, horizon_disc); % size depends from the number of controls
     [state_array, defects, u] = forward_multi_shoot(horizon_disc, state_array, u, dt, state_array, L, l);
 
-    plot_xu([state_array;defects], u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi start")
-    %plot_xu([state_array;defects], u, time_array, [],state_d,order,"multi start")
+    %plot_xu([state_array;defects], u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi start")
+    plot_xu([state_array;defects], u, time_array, [],state_d,order,"multi start")
 
     J = cost(state_array, state_d, new_u, Q, R, Qn) * 1e3;
     new_J = J;
@@ -73,8 +75,8 @@ function u = iLQR_function(istate, state_d, it, u)
         %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"linear")
         if mod(iteration, plot_step) == 0
 
-            plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"linear")
-            %plot_xu([new_state_array; defects], new_u, time_array, [], state_d, order, "linear")
+            %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"linear")
+            plot_xu([new_state_array; defects], new_u, time_array, [], state_d, order, "linear")
         end
 
         %[new_state_array,new_u] = forward_shoot(new_state_array(:, 1),horizon_disc,new_u,dt,L,l,state_array);
@@ -84,8 +86,8 @@ function u = iLQR_function(istate, state_d, it, u)
         %plot before exit to understand what is happening
         %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"multi")
         if mod(iteration, plot_step) == 0
-            plot_xu([new_state_array;new_defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi")
-            %plot_xu([state_array; defects], u, time_array, [], state_d,order, "multi")
+            %plot_xu([new_state_array;new_defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi")
+            plot_xu([state_array; defects], u, time_array, [], state_d,order, "multi")
 
         end
 
@@ -138,7 +140,8 @@ function u = iLQR_function(istate, state_d, it, u)
 
         if (((relative < j_rm)) && all((sum(abs(new_defects), 2)) < defects_max))
 
-            plot_xu([state_array;defects], u, time_array, ["x", "dx", "phi", "dphi", "defx", "defdx", "defphi", "defdphi"], state_d, [1, 3, nan, nan; 2, 4, nan, nan; 5, 6, 7, 8], "final")
+            %plot_xu([state_array;defects], u, time_array, ["x", "dx", "phi", "dphi", "defx", "defdx", "defphi", "defdphi"], state_d, [1, 3, nan, nan; 2, 4, nan, nan; 5, 6, 7, 8], "final")
+            plot_xu([new_state_array; defects], new_u, time_array, [], state_d, order, "final")
             return
         end
 
