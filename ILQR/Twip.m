@@ -1,8 +1,9 @@
-classdef Twip
+classdef Twip < Model
 
     methods (Static)
 
         function dy = ForwardDynamics(y, u)
+
             %ForwardDynamics(~,y,u)
 
             dy = zeros(6, 1);

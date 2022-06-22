@@ -1,4 +1,4 @@
-classdef CartPend
+classdef CartPend < Model
 
     % properties 
     %     m = 1;
