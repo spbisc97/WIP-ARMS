@@ -132,7 +132,7 @@ classdef iLQR_GNMS
                 %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"multi")
                 if mod(iteration, obj.plot_steps) == 0
                     %plot_xu([new_state_array;new_defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi")
-                    obj.plot_xu([state_array; defects], u, time_array,obj.names, state_d,obj.order, "multi")
+                    obj.plot_xu([new_state_array; new_defects], new_u, time_array,obj.names, state_d,obj.order, "multi")
 
                 end
 
@@ -217,7 +217,7 @@ classdef iLQR_GNMS
             l = zeros(n_controls, obj.horizon_disc-1); % size depends from the number of controls
             %Fill the S and s matrix
             s(:, obj.horizon_disc) = obj.Qn * (x(:, obj.horizon_disc) - xd(:, obj.horizon_disc));
-            S(:, :, obj.horizon_disc-1) = obj.Qn;
+            S(:, :, obj.horizon_disc) = obj.Qn;
             A_ = zeros(n_states, n_states, (obj.horizon_disc - 1));
             B_ = zeros(n_states, n_controls, obj.horizon_disc - 1);
 
@@ -267,17 +267,16 @@ classdef iLQR_GNMS
 
             %x(:, 1) = ix; %initial state
 
-            for n = 1:obj.horizon_disc - 1;
+            for n = 1:obj.horizon_disc - 1
                 %N = (n_states * n - (n_states - 1)):(n_states * n);
-                c = 1; %c=all(defects(:, n)==0);
-                %u(:, n) = u(:, n) + c*(l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n)));
-
+                traj = 1; %
+                contr= 0;%all(defects(:, n)==0);
+                u(:, n) = u(:, n) + contr*(l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n)));
                 %                 if J < 1e8
                 A = A_(:, :,n);
                 B = B_(:, :,n);
                 x(:, n + 1) = x_old(:, n + 1) + (defects(:, n)) ... % take the previous value
-                    +c * ((A + B * L(:, :,n)) * (x(:, n) - x_old(:, n)) ... %like add the control
-                    +B * l(:, n));
+                    +traj * ((A + B * L(:, :,n)) * (x(:, n) - x_old(:, n))+B * l(:, n));
 
                 %                 else
                 %                     x(:, n + 1) = obj.dynamics_euler(x(:, n), u(:, n), obj.dt);
@@ -453,7 +452,7 @@ classdef iLQR_GNMS
             grid minor
 
 
-            pause(1e-4)
+            pause(0)
             set(gcf, 'Name', type, 'NumberTitle', 'off')
         end %function
 
