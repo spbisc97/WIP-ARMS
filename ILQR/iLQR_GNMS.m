@@ -6,30 +6,40 @@ classdef iLQR_GNMS
         pieces  =16
         defects_max double =0.001
         horizon double = 10;
-        horizon_disc  = 1001;
+        horizon_disc=1001
         order=[]
         names=[]
         model
         plot_steps  = 1;
         plot_start  =true ;
         plot_end = true ;
-
-
+        dt=0.01
     end
     methods
         %% Dynamics
 
-        function state = dynamics_rk4(obj,state, u, dt)
+        function state = dynamics_rk4(obj,state, u)
             f1 = obj.model.ForwardDynamics(state, u);
-            f2 = obj.model.ForwardDynamics(state + 0.5 * dt * f1, u);
-            f3 = obj.model.ForwardDynamics(state + 0.5 * dt * f2, u);
-            f4 = obj.model.ForwardDynamics(state + dt * f3, u);
-            state = state + (dt / 6) * (f1 + 2 * f2 + 2 * f3 + f4);
+            f2 = obj.model.ForwardDynamics(state + 0.5 * obj.dt * f1, u);
+            f3 = obj.model.ForwardDynamics(state + 0.5 * obj.dt * f2, u);
+            f4 = obj.model.ForwardDynamics(state + obj.dt * f3, u);
+            state = state + (obj.dt / 6) * (f1 + 2 * f2 + 2 * f3 + f4);
         end %function
 
-        function state = dynamics_euler(obj,state, u, dt)
-            state = obj.model.euler_integration_fun(state, ForwardDynamics(state, u), dt);
+        function state = dynamics_euler(obj,state, u)
+            state = obj.model.euler_integration_fun(state, ForwardDynamics(state, u), obj.dt);
         end %function
+
+        function obj=set.horizon(obj,horizon)
+            if horizon<0 
+                error("horizon has to be positive")
+            else
+                obj.horizon=horizon;
+                obj.horizon_disc=floor(obj.horizon/obj.dt)+1 ;%ok
+            end
+        end
+
+
         function obj=iLQR_GNMS(model,Q ,R ,Qn,pieces,defects_max)
 
             if nargin < 1
@@ -53,7 +63,6 @@ classdef iLQR_GNMS
         end
         function u = iLQR_function(obj,istate, state_d, it, u)
             %global u %use global u to remember last optimized values
-            dt = 0.01; %delta t for integration
             [n_states, sz] = size(state_d);
             [n_controls, ~] = size(u);
 
@@ -63,7 +72,7 @@ classdef iLQR_GNMS
 
             %* find real horizon
             if obj.horizon_disc > (sz)
-                obj.horizon = (sz - 1) * dt;
+                obj.horizon = (sz - 1) * obj.dt;
                 obj.horizon_disc = (sz);
             end
 
@@ -78,17 +87,17 @@ classdef iLQR_GNMS
             new_u = u;
             alpha = 1;
             lmb = 1;
-            time_array = it:dt:(obj.horizon + it);
+            time_array = it:obj.dt:(obj.horizon + it);
 
             % !finished initialization
 
             %     for elem = 1:(horizon_disc - 1) %compute the forward dynamics to define the defects
-            %         state_array(:, elem + 1)=dynamics_euler(state_array(:,elem),u(:,elem),dt);
+            %         state_array(:, elem + 1)=dynamics_euler(state_array(:,elem),u(:,elem),obj.dt);
             %     end
 
             L = zeros(n_controls,n_states, obj.horizon_disc ); %size depends both from the number of controls and states
             l = zeros(n_controls, obj.horizon_disc); % size depends from the number of controls
-            [state_array, defects, u] = forward_multi_shoot(obj, state_array, u, dt, state_array, L, l);
+            [state_array, defects, u] = forward_multi_shoot(obj, state_array, u, state_array, L, l);
 
             if obj.plot_start
                 obj.plot_xu([state_array;defects], u, time_array, obj.names,state_d,obj.order,"multi start")
@@ -101,8 +110,8 @@ classdef iLQR_GNMS
             %start the optimizing iterations
             for iteration = 1:iterations - 1
                 [L, l, A_, B_] = backward(obj,n_states,  defects, state_array, state_d, u);
-
-                [new_state_array, new_u] = forward_linear_shoot(obj, state_array, u, dt, lmb * L, alpha * l, defects, A_, B_, new_J);
+                
+                [new_state_array, new_u] = forward_linear_shoot(obj, state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
 
                 %     plot(time_array,state_array)
                 %     legend()
@@ -117,7 +126,7 @@ classdef iLQR_GNMS
 
                 %[new_state_array,new_u] = forward_shoot(new_state_array(:, 1),horizon_disc,new_u,dt,L,l,state_array);
 
-                [new_state_array, new_defects, new_u] = obj.forward_multi_shoot(new_state_array, new_u, dt,state_array, lmb*L, alpha*l);
+                [new_state_array, new_defects, new_u] = obj.forward_multi_shoot(new_state_array, new_u, state_array, lmb*L, alpha*l);
 
                 %plot before exit to understand what is happening
                 %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"multi")
@@ -242,23 +251,23 @@ classdef iLQR_GNMS
         end %function
 
         %% Forward Shoot
-        function [x, u] = forward_shoot(obj,ix,  u, dt, L, l, x_old)
+        function [x, u] = forward_shoot(obj,ix,  u, L, l, x_old)
             n_states = length(ix);
             x = repmat(ix, 1, obj.horizon_disc);
             for n = 1:obj.horizon_disc - 1
                 u(:, n) = u(:, n) + l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n));
-                x(:, n + 1) = dynamics_rk4(x(:, n), u(:,n), dt);
+                x(:, n + 1) = obj.dynamics_rk4(x(:, n), u(:,n));
             end
         end %function
 
         %% Forward Linear Shoot
-        function [x, u] = forward_linear_shoot(obj, x_old, u, dt, L, l, defects, A_, B_, J)
+        function [x, u] = forward_linear_shoot(obj, x_old, u, L, l, defects, A_, B_, ~)
             x = x_old;
             [n_states, ~] = size(x); %#ok
 
             %x(:, 1) = ix; %initial state
 
-            for n = 1:obj.horizon_disc - 1
+            for n = 1:obj.horizon_disc - 1;
                 %N = (n_states * n - (n_states - 1)):(n_states * n);
                 c = 1; %c=all(defects(:, n)==0);
                 %u(:, n) = u(:, n) + c*(l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n)));
@@ -271,7 +280,7 @@ classdef iLQR_GNMS
                     +B * l(:, n));
 
                 %                 else
-                %                     x(:, n + 1) = obj.dynamics_euler(x(:, n), u(:, n), dt);
+                %                     x(:, n + 1) = obj.dynamics_euler(x(:, n), u(:, n), obj.dt);
                 %                 end
             end
 
@@ -279,7 +288,7 @@ classdef iLQR_GNMS
 
         %% Forward Multi Shoot
 
-        function [x, defects, u] = forward_multi_shoot(obj, x, u, dt, x_old, L, l)
+        function [x, defects, u] = forward_multi_shoot(obj, x, u, x_old, L, l)
 
             %closedloop=0;
 
@@ -327,7 +336,7 @@ classdef iLQR_GNMS
                     n = t;
                     %N = (n_states * n - (n_states - 1)):(n_states * n);
                     us(:, n) = u(:, n) + (k(i) * l(:, n) + L(:,:,n) * (stato(:, t) - x_old(:, n)));
-                    stato(:, t + 1) = obj.dynamics_rk4(stato(:, t), us(:, elem), dt);
+                    stato(:, t + 1) = obj.dynamics_rk4(stato(:, t), us(:, elem));
                     t = t + 1;
                 end
 
