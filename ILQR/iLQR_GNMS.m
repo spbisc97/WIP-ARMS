@@ -14,6 +14,7 @@ classdef iLQR_GNMS
         plot_start  =true ;
         plot_end = true ;
         dt=0.01
+        pause_duration=0;
     end
     methods
         %% Dynamics
@@ -81,7 +82,7 @@ classdef iLQR_GNMS
 
             %*check and fix control lenght
             [~, usz] = size(u);
-            u = [u(:, 2:end), zeros(n_controls, (obj.horizon_disc - 1) - (usz - 1))];
+            u = [u(:, 2:end), repmat(u(:,end),1, (obj.horizon_disc - 1) - (usz - 1))];
             % u=u*0; reset suggested controls
             state_array = ones(1, obj.horizon_disc) .* istate;
             new_u = u;
@@ -100,7 +101,7 @@ classdef iLQR_GNMS
             [state_array, defects, u] = forward_multi_shoot(obj, state_array, u, state_array, L, l);
 
             if obj.plot_start
-                obj.plot_xu([state_array;defects], u, time_array, obj.names,state_d,obj.order,"multi start")
+                obj.plot_xu([state_array;defects], u, time_array, obj.names,state_d,obj.order,"multi start",obj.pause_duration)
             end
             J = obj.cost(state_array, state_d, new_u) * 1e3;
             new_J = J;
@@ -121,7 +122,7 @@ classdef iLQR_GNMS
                 if mod(iteration, obj.plot_steps) == 0
 
                     %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"linear")
-                    obj.plot_xu([new_state_array; defects], new_u, time_array, obj.names, state_d, obj.order, "linear")
+                    obj.plot_xu([new_state_array; defects], new_u, time_array, obj.names, state_d, obj.order, "linear",obj.pause_duration)
                 end
 
                 %[new_state_array,new_u] = forward_shoot(new_state_array(:, 1),horizon_disc,new_u,dt,L,l,state_array);
@@ -132,7 +133,7 @@ classdef iLQR_GNMS
                 %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"multi")
                 if mod(iteration, obj.plot_steps) == 0
                     %plot_xu([new_state_array;new_defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi")
-                    obj.plot_xu([new_state_array; new_defects], new_u, time_array,obj.names, state_d,obj.order, "multi")
+                    obj.plot_xu([new_state_array; new_defects], new_u, time_array,obj.names, state_d,obj.order, "multi",obj.pause_duration)
 
                 end
 
@@ -184,7 +185,7 @@ classdef iLQR_GNMS
 
                 if (((relative < j_rm)) && all((sum(abs(new_defects), 2)) < obj.defects_max))
                     if obj.plot_end
-                        obj.plot_xu([new_state_array; defects], new_u, time_array, obj.names, state_d, obj.order, "final")
+                        obj.plot_xu([new_state_array; defects], new_u, time_array, obj.names, state_d, obj.order, "final",obj.pause_duration)
                     end
                     return
                 end
@@ -275,8 +276,8 @@ classdef iLQR_GNMS
                 %                 if J < 1e8
                 A = A_(:, :,n);
                 B = B_(:, :,n);
-                x(:, n + 1) = x_old(:, n + 1) + (defects(:, n)) ... % take the previous value
-                    +traj * ((A + B * L(:, :,n)) * (x(:, n) - x_old(:, n))+B * l(:, n));
+                x(:, n + 1) = x_old(:, n + 1) + (defects(:, n)) ... % starting point
+                    +traj * ((A + B * L(:, :,n)) * (x(:, n) - x_old(:, n))+B * l(:, n));%adjustment
 
                 %                 else
                 %                     x(:, n + 1) = obj.dynamics_euler(x(:, n), u(:, n), obj.dt);
@@ -369,7 +370,7 @@ classdef iLQR_GNMS
         %% Plot
     end
     methods(Static)
-        function plot_xu(x, u, time_array, names, xd, order, type)
+        function plot_xu(x, u, time_array, names, xd, order, type,pause_duration)
 
             %plot_xu(x, u, time_array, names,xd,order)
             if type == ""
@@ -402,15 +403,19 @@ classdef iLQR_GNMS
             if nargin < 7
                 type = 'figure';
             end
+            if nargin < 8
+                pause_duration = inf;
+            end
 
 
 
             [h, l] = size(order);
 
-            tiledlayout(h + 1, 1);
+
+            tiledlayout(h + 1, 1,'Padding','Compact','Tilespacing','Compact');
 
             for i = 1:h
-                nexttile
+                nexttile(i)
                 j = 1;
                 lgd = [];
 
@@ -444,15 +449,18 @@ classdef iLQR_GNMS
             end
             xl = xlim;
 
-            nexttile
+            nexttile(h+1)
             plot(time_array(1:end - 1), u)
             %legend("controls",'Location','northeastoutside')
             title(type+"   controls")
             xlim(xl);
             grid minor
 
-
-            pause(0)
+            if isinf(pause_duration)
+                pause
+            else
+                pause(pause_duration)
+            end
             set(gcf, 'Name', type, 'NumberTitle', 'off')
         end %function
 
