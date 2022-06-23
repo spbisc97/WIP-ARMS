@@ -4,7 +4,7 @@ function CartPend_main(Q, R, wclose)
         wclose = 0;
     end
     if nargin < 2
-        R=0.0005;
+        R=0.0001;
     end
     if nargin <1
         Q=diag([10,1,10,1]);
