@@ -4,7 +4,7 @@ function CartPend_main(Q, R, wclose)
         wclose = 0;
     end
     if nargin < 2
-        R=0.0001;
+        R=0.0005;
     end
     if nargin <1
         Q=diag([10,1,10,1]);
@@ -37,7 +37,7 @@ function CartPend_main(Q, R, wclose)
     il.plot_steps=10;  
     il.plot_start=false;
     il.plot_end=false;
-
+    %il.pieces=16;
 
     while t < tf-5
         %find u control
