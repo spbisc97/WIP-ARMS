@@ -114,25 +114,16 @@ classdef iLQR_GNMS
                 
                 [new_state_array, new_u] = forward_linear_shoot(obj, state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
 
-                %     plot(time_array,state_array)
-                %     legend()
-                % disp("new_linear")
-                % pause
-                %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"linear")
                 if mod(iteration, obj.plot_steps) == 0
 
-                    %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"linear")
                     obj.plot_xu([new_state_array; defects], new_u, time_array, obj.names, state_d, obj.order, "linear",obj.pause_duration)
                 end
 
-                %[new_state_array,new_u] = forward_shoot(new_state_array(:, 1),horizon_disc,new_u,dt,L,l,state_array);
 
                 [new_state_array, new_defects, new_u] = obj.forward_multi_shoot(new_state_array, new_u, state_array, lmb*L, alpha*l);
 
                 %plot before exit to understand what is happening
-                %plot_xu([new_state_array;defects], new_u, time_array, ["x", "dx", "phi", "dphi","defects"],state_d,[1,3;2,4;5,NaN],"multi")
                 if mod(iteration, obj.plot_steps) == 0
-                    %plot_xu([new_state_array;new_defects], new_u, time_array, ["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"],state_d,[1,3,nan,nan;2,4,nan,nan;5,6,7,8],"multi")
                     obj.plot_xu([new_state_array; new_defects], new_u, time_array,obj.names, state_d,obj.order, "multi",obj.pause_duration)
 
                 end
@@ -228,6 +219,8 @@ classdef iLQR_GNMS
                 [A_(:, :, n), B_(:, :, n)] = obj.model.linearization_discretization(u(:, n), x(:, n), 1);
                 A = A_(:, :, n);
                 B = B_(:, :, n);
+                %check 
+                %disp(A*x(:,n)+B*u(:,n) -x(:,n+1))%error on discretization
                 %compute r,h,G,H to simplify S and s computations
                 P = 0; %repmat([0], [1, n_states]); %set mixed weight to zero delta_u*P*delta_x
                 r = obj.R * u(:, n); % the derivative of uRu

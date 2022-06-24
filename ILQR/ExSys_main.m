@@ -4,7 +4,7 @@ function ExSys_main(Q, R, wclose)
         wclose = 0;
     end
     if nargin < 2
-        R=0.01;
+        R=0.001;
     end
     if nargin <1
         Q=0;
@@ -17,7 +17,7 @@ function ExSys_main(Q, R, wclose)
 
     clc;
     % global u;
-    u = 0;
+    u =-4;
     y = 1.5; %initial point
     t = 0.01; %initial time
     tf = 15; %final time
@@ -37,15 +37,17 @@ function ExSys_main(Q, R, wclose)
     il.names=["x","defx"];   
     il.plot_steps=1;  
     il.plot_start=true;
-    il.plot_end=false;
-    il.pieces=15;
+    il.plot_end=true;
+    il.pieces=5;
     il.horizon=2.99;
-    il.defects_max=il.defects_max*1e-2;
+    il.defects_max=il.defects_max*1e-6;
+    il.pause_duration=0;
 
     while t < tf-5
         %find u control
         t_disc=floor(t / dt);
         y_des = traj_d(:, t_disc);
+        u =-4;
         u = il.iLQR_function(y,traj_d(:,t_disc:end),t,u);
         %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t,u);
         %u = LQR_function(y, y_des, Q, R);
