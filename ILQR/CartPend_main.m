@@ -17,7 +17,7 @@ function CartPend_main(Q, R, wclose)
     clc;
     % global u;
     u = [0,0];
-    y = [0.2; 0; 0; 0]; %initial point
+    y = [0.7; 0; 0.1; 0]; %initial point
     t = 0.01; %initial time
     tf = 15; %final time
     dt = 0.01; %increasing time %time step
@@ -35,8 +35,10 @@ function CartPend_main(Q, R, wclose)
     il.order=[1,3,nan,nan;2,4,nan,nan];
     il.names=["x", "dx", "phi", "dphi"];   
     il.plot_steps=10;  
-    il.plot_start=false;
+    il.plot_start=true;
     il.plot_end=false;
+    il.plot_duration=0;
+
     %il.pieces=16;
 
     while t < tf-5
