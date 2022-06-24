@@ -48,7 +48,7 @@ function ExSys_main(Q, R, wclose)
         t_disc=floor(t / dt);
         y_des = traj_d(:, t_disc);
         u =-2;
-        u = il.iLQR_function(y,traj_d(:,t_disc:end),t,u);
+        u = il.MS_iLQR(y,traj_d(:,t_disc:end),t,u);
         %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t,u);
         %u = LQR_function(y, y_des, Q, R);
         %save to plot

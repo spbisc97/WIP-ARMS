@@ -64,7 +64,7 @@ classdef iLQR_GNMS
         end %function
 
         %%main functions
-        function u = iLQR_function(obj,istate, state_d, it, u)
+        function u = MS_iLQR(obj,istate, state_d, it, u)
             %global u %use global u to remember last optimized values
             [n_states, sz] = size(state_d);
             [n_controls, ~] = size(u);
