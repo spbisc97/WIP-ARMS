@@ -31,7 +31,7 @@ function Twip_main(Q, R, wclose)
     time_array = [t]; %array del tempo (dovrebbe coincidere con la l'array "time")
     y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
     il=iLQR_GNMS(Twip(),Q,R,Q);
-    il.order=[1,2,nan,nan,nan,nan;3,4,nan,nan,nan,nan;5,6,nan,nan,nan,nan;7,8,9,10,11,12];
+    il.order=[1,2,nan,nan,nan,nan;3,4,nan,nan,nan,nan;5,6,nan,nan,nan,nan];
     il.names=["phi","dphi","x" "dx", "theta","dtheta"];
 
     il.plot_steps=3;

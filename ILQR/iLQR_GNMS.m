@@ -101,7 +101,7 @@ classdef iLQR_GNMS
             [state_array, defects, u] = forward_multi_shoot(obj, state_array, u, state_array, L, l);
 
             if obj.plot_start
-                obj.plot_xu([state_array;defects], u, time_array, obj.names,state_d,obj.order,"multi start",obj.pause_duration)
+                obj.plot_xu(state_array, u, time_array, obj.names,state_d,defects,obj.order,"multi start",obj.pause_duration)
             end
             J = obj.cost(state_array, state_d, new_u) * 1e3;
             new_J = J;
@@ -116,7 +116,7 @@ classdef iLQR_GNMS
 
                 if mod(iteration, obj.plot_steps) == 0
 
-                    obj.plot_xu([new_state_array; defects], new_u, time_array, obj.names, state_d, obj.order, "linear",obj.pause_duration)
+                    obj.plot_xu( new_state_array, new_u, time_array, obj.names, state_d,defects, obj.order, "linear",obj.pause_duration)
                 end
 
 
@@ -124,7 +124,7 @@ classdef iLQR_GNMS
 
                 %plot before exit to understand what is happening
                 if mod(iteration, obj.plot_steps) == 0
-                    obj.plot_xu([new_state_array; new_defects], new_u, time_array,obj.names, state_d,obj.order, "multi",obj.pause_duration)
+                    obj.plot_xu(new_state_array, new_u, time_array,obj.names, state_d,new_defects,obj.order, "multi",obj.pause_duration)
 
                 end
 
@@ -176,7 +176,7 @@ classdef iLQR_GNMS
 
                 if (((relative < j_rm)) && all((sum(abs(new_defects), 2)) < obj.defects_max))
                     if obj.plot_end
-                        obj.plot_xu([new_state_array; defects], new_u, time_array, obj.names, state_d, obj.order, "final",obj.pause_duration)
+                        obj.plot_xu(new_state_array, new_u, time_array, obj.names, state_d, defects,obj.order, "final",obj.pause_duration)
                     end
                     return
                 end
@@ -363,7 +363,7 @@ classdef iLQR_GNMS
         %% Plot
     end
     methods(Static)
-        function plot_xu(x, u, time_array, names, xd, order, type,pause_duration)
+        function plot_xu(x, u, time_array, names, xd,defects,order, type,pause_duration)
 
             %plot_xu(x, u, time_array, names,xd,order)
             if type == ""
@@ -399,13 +399,20 @@ classdef iLQR_GNMS
             if nargin < 8
                 pause_duration = inf;
             end
-
-
-
+            
             [h, l] = size(order);
 
+            if isempty(defects)
+                tiles_n=h+1;
+            else
+                tiles_n=h+2;
+            end
 
-            tiledlayout(h + 1, 1,'Padding','Compact','Tilespacing','Compact');
+
+
+
+
+            tiledlayout(tiles_n, 1,'Padding','Compact','Tilespacing','Compact');
 
             for i = 1:h
                 nexttile(i)
@@ -441,11 +448,26 @@ classdef iLQR_GNMS
 
             end
             xl = xlim;
+            lgd=[];
+                nexttile(h+1)
+                plot(time_array(1:end), defects)
+                for i=names
+                    lgd=[lgd,"def"+i];
+                end
+                legend(lgd,'Location','northeastoutside')
+                title(type+"  defects")
+                ylim('padded')
+                xlim(xl);
+                grid minor
 
-            nexttile(h+1)
+
+
+
+            nexttile(tiles_n)
             plot(time_array(1:end - 1), u)
             %legend("controls",'Location','northeastoutside')
             title(type+"   controls")
+            ylim('padded')
             xlim(xl);
             grid minor
 

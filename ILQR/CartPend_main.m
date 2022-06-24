@@ -32,8 +32,8 @@ function CartPend_main(Q, R, wclose)
     y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
 
     il=iLQR_GNMS(CartPend(),Q,R,Q);
-    il.order=[1,3,nan,nan;2,4,nan,nan;5,6,7,8];
-    il.names=["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"];   
+    il.order=[1,3,nan,nan;2,4,nan,nan];
+    il.names=["x", "dx", "phi", "dphi"];   
     il.plot_steps=10;  
     il.plot_start=false;
     il.plot_end=false;

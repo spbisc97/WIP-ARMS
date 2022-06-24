@@ -33,8 +33,8 @@ function ExSys_main(Q, R, wclose)
     y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
 
     il=iLQR_GNMS(ExSys(),Q,R,Qn);
-    il.order=[1;2];
-    il.names=["x","defx"];   
+    il.order=[1];
+    il.names=["x"];   
     il.plot_steps=1;  
     il.plot_start=true;
     il.plot_end=true;
