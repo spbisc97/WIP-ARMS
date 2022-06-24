@@ -388,15 +388,15 @@ classdef iLQR_GNMS
                 desired = false;
             end
 
-            if nargin < 6||isempty(order)
+            if nargin < 7||isempty(order)
 
                 order = (1:h)';
             end
 
-            if nargin < 7
+            if nargin < 8
                 type = 'figure';
             end
-            if nargin < 8
+            if nargin < 9
                 pause_duration = inf;
             end
             
