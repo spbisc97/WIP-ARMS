@@ -221,7 +221,7 @@ classdef iLQR_GNMS
             l = zeros(n_controls, obj.horizon_disc); % size depends from the number of controls
             [state_array, u] = forward_shoot(obj, state_array, u, state_array, L, l);
             if obj.plot_start
-                obj.plot_xu(state_array, u, time_array, obj.names,state_d,[],obj.order,"start",obj.pause_duration)
+                obj.plot_xu(state_array, u, time_array, obj.names,state_d,[],obj.order,"start",obj.plot_duration)
             end
             J = obj.cost(state_array, state_d, new_u);
             new_J = J;
@@ -237,7 +237,7 @@ classdef iLQR_GNMS
 
                 %plot before exit to understand what is happening
                 if mod(iteration, obj.plot_steps) == 0
-                    obj.plot_xu(new_state_array, new_u, time_array,obj.names, state_d,[],obj.order, "ss ilqr",obj.pause_duration)
+                    obj.plot_xu(new_state_array, new_u, time_array,obj.names, state_d,[],obj.order, "ss ilqr",obj.plot_duration)
 
                 end
 
@@ -287,7 +287,7 @@ classdef iLQR_GNMS
 
                 if (((relative < j_rm)))
                     if obj.plot_end
-                        obj.plot_xu(new_state_array, new_u, time_array, obj.names, state_d, [],obj.order, "final",obj.pause_duration)
+                        obj.plot_xu(new_state_array, new_u, time_array, obj.names, state_d, [],obj.order, "final",obj.plot_duration)
                     end
                     return
                 end
