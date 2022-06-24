@@ -41,7 +41,7 @@ function ExSys_main(Q, R, wclose)
     il.pieces=5;
     il.horizon=2.99;
     il.defects_max=il.defects_max*1e-6;
-    il.pause_duration=0;
+    il.plot_duration=0;
 
     while t < tf-5
         %find u control

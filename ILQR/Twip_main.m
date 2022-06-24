@@ -34,9 +34,11 @@ function Twip_main(Q, R, wclose)
     il.order=[1,2,nan,nan,nan,nan;3,4,nan,nan,nan,nan;5,6,nan,nan,nan,nan];
     il.names=["phi","dphi","x" "dx", "theta","dtheta"];
 
-    il.plot_steps=3;
+    il.plot_steps=1;
     il.plot_start=true;
     il.plot_end=true;
+    il.plot_duration=0;
+
     
     while t < tf-5
         %find u control
