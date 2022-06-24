@@ -404,8 +404,10 @@ classdef iLQR_GNMS
 
             if isempty(defects)
                 tiles_n=h+1;
+                def=false;
             else
                 tiles_n=h+2;
+                def=true;
             end
 
 
@@ -449,16 +451,18 @@ classdef iLQR_GNMS
             end
             xl = xlim;
             lgd=[];
+            if def
                 nexttile(h+1)
                 plot(time_array(1:end), defects)
                 for i=names
-                    lgd=[lgd,"def"+i];
+                    lgd=[lgd,"def-"+i];
                 end
                 legend(lgd,'Location','northeastoutside')
                 title(type+"  defects")
                 ylim('padded')
                 xlim(xl);
                 grid minor
+            end
 
 
 
