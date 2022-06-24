@@ -61,7 +61,9 @@ classdef iLQR_GNMS
             if nargin > 5
                 obj.defects_max=defects_max;
             end
-        end
+        end %function
+
+        %%main functions
         function u = iLQR_function(obj,istate, state_d, it, u)
             %global u %use global u to remember last optimized values
             [n_states, sz] = size(state_d);
@@ -185,6 +187,115 @@ classdef iLQR_GNMS
 
         end %function
 
+        function u = SS_iLQR(obj,istate, state_d, it, u)
+            [n_states, sz] = size(state_d);
+            [n_controls, ~] = size(u);
+
+            iterations = 100000;
+            bad_iterations = 0;
+            j_rm = 0.0001;
+
+            %* find real horizon
+            if obj.horizon_disc > (sz)
+                obj.horizon = (sz - 1) * obj.dt;
+                obj.horizon_disc = (sz);
+            end
+
+            %*define desidered state in the horizon we have
+            state_d = state_d(:, 1:obj.horizon_disc);
+
+            %*check and fix control lenght
+            [~, usz] = size(u);
+            u = [u(:, 2:end), repmat(u(:,end),1, (obj.horizon_disc - 1) - (usz - 1))];
+            % u=u*0; reset suggested controls
+            state_array = ones(1, obj.horizon_disc) .* istate;
+            new_u = u;
+            alpha = 1;
+            lmb = 1;
+            time_array = it:obj.dt:(obj.horizon + it);
+
+            % !finished initialization
+
+
+            L = zeros(n_controls,n_states, obj.horizon_disc ); %size depends both from the number of controls and states
+            l = zeros(n_controls, obj.horizon_disc); % size depends from the number of controls
+            [state_array, u] = forward_shoot(obj, state_array, u, state_array, L, l);
+            if obj.plot_start
+                obj.plot_xu(state_array, u, time_array, obj.names,state_d,[],obj.order,"start",obj.pause_duration)
+            end
+            J = obj.cost(state_array, state_d, new_u);
+            new_J = J;
+            new_state_array=state_array;
+            disp("J")
+            disp(J)
+
+            %start the optimizing iterations
+            for iteration = 1:iterations - 1
+                [L, l, ~, ~] = backward_ilqr_ss(obj,n_states, state_array, state_d, u);
+
+                [new_state_array, new_u] = obj.forward_shoot(new_state_array, new_u, state_array, lmb*L, alpha*l);
+
+                %plot before exit to understand what is happening
+                if mod(iteration, obj.plot_steps) == 0
+                    obj.plot_xu(new_state_array, new_u, time_array,obj.names, state_d,[],obj.order, "ss ilqr",obj.pause_duration)
+
+                end
+
+                %pause
+                %calculate new costs
+                new_J = obj.cost(new_state_array, state_d, new_u);
+
+                relative = abs(new_J - J) / new_J;
+
+                if ~isnan(new_J) && ~isinf(new_J) && (J > new_J)
+                    bad_iterations = 0;
+                else
+                    bad_iterations = bad_iterations + 1;
+                end
+
+                T = table(new_J, J, relative, bad_iterations, alpha, 'VariableNames', {'new_cost', 'prev_cost', 'relative', 'last bad', 'alpha'});
+
+                disp(T)
+
+                if bad_iterations == 0
+                    state_array = new_state_array;
+                    J = new_J;
+                    u = new_u;
+                    alpha = 1;
+                    lmb = 1;
+                else
+
+                    if ~isnan(new_J) && ~isinf(new_J)
+                        alpha = alpha / 2;
+                        lmb = 1;
+                        state_array = new_state_array;
+                        J = new_J;
+                        u = new_u;
+                    else
+                        alpha = alpha / 2;
+                        lmb = 1;
+                        continue
+                    end
+
+                end
+
+                if bad_iterations > 20
+                    relative = 0;
+
+                else
+                end
+
+                if (((relative < j_rm)))
+                    if obj.plot_end
+                        obj.plot_xu(new_state_array, new_u, time_array, obj.names, state_d, [],obj.order, "final",obj.pause_duration)
+                    end
+                    return
+                end
+
+            end
+
+        end %function
+
 
 
         %% Cost Function
@@ -208,6 +319,9 @@ classdef iLQR_GNMS
             L = zeros(n_controls, n_states, obj.horizon_disc-1); %size depends both from the number of controls and states
             l = zeros(n_controls, obj.horizon_disc-1); % size depends from the number of controls
             %Fill the S and s matrix
+            if isempty(defects)
+                defects=zeros(n_states, obj.horizon_disc);
+            end
             s(:, obj.horizon_disc) = obj.Qn * (x(:, obj.horizon_disc) - xd(:, obj.horizon_disc));
             S(:, :, obj.horizon_disc) = obj.Qn;
             A_ = zeros(n_states, n_states, (obj.horizon_disc - 1));
@@ -223,11 +337,17 @@ classdef iLQR_GNMS
                 %disp(A*x(:,n)+B*u(:,n) -x(:,n+1))%error on discretization
                 %compute r,h,G,H to simplify S and s computations
                 P = 0; %repmat([0], [1, n_states]); %set mixed weight to zero delta_u*P*delta_x
+                
+                %R and Q derivatives
                 r = obj.R * u(:, n); % the derivative of uRu
                 q = obj.Q * (x(:, n) - xd(:, n));
-                h = r + B.' * (s(:, n + 1) + S(:, :, n + 1) * (defects(:, n))); %gu + S(:, N + 4) * defects(:, n+1)
-                G = P + B.' * S(:, :, n + 1) * A; %Gux
-                H = obj.R + B.' * S(:, :, n + 1) * B; %Guu
+
+                %gu calculation
+                h = r + B.' * (s(:, n + 1) + S(:, :, n + 1) * (defects(:, n)));
+                %Gux
+                G = P + B.' * S(:, :, n + 1) * A; 
+                %Guu
+                H = obj.R + B.' * S(:, :, n + 1) * B;
                 L(:, :, n) = -pinv(H) * G; %K
                 l(:, n) = -pinv(H) * h; %d
 
@@ -241,13 +361,59 @@ classdef iLQR_GNMS
                 s(:, n) = gx + G.' * l(:, n) + L(:, :, n).' * (h + H * l(:, n));
 
             end
+        end %function
+
+        function [L, l, A_, B_] = backward_ilqr_ss(obj,n_states, x, xd, u)
+            [n_controls, ~] = size(u);
+            S = zeros(n_states, n_states, obj.horizon_disc);
+            s = zeros(n_states, obj.horizon_disc); %deep horizon+1 and hight is n_states
+            L = zeros(n_controls, n_states, obj.horizon_disc-1); %size depends both from the number of controls and states
+            l = zeros(n_controls, obj.horizon_disc-1); % size depends from the number of controls
+            %Fill the S and s matrix
+            s(:, obj.horizon_disc) = obj.Qn * (x(:, obj.horizon_disc) - xd(:, obj.horizon_disc));
+            S(:, :, obj.horizon_disc) = obj.Qn;
+            A_ = zeros(n_states, n_states, (obj.horizon_disc - 1));
+            B_ = zeros(n_states, n_controls, obj.horizon_disc - 1);
+    
+            %back
+            for n = (obj.horizon_disc - 1):-1:1
+                %N = (n_states * n - (n_states-1)):(n_states * n);
+                [A_(:, :, n), B_(:, :, n)] = obj.model.linearization_discretization(u(:, n), x(:, n), 1);
+                A = A_(:, :, n);
+                B = B_(:, :, n);
+                %check 
+                %compute r,h,G,H to simplify S and s computations
+                P = 0; %repmat([0], [1, n_states]); %set mixed weight to zero delta_u*P*delta_x
+                
+                %R and Q derivatives
+                r = obj.R * u(:, n); % the derivative of uRu
+                q = obj.Q * (x(:, n) - xd(:, n));
+
+                %gu calculation
+                gu = r + B.' * (s(:, n + 1));
+
+                gx = q + A' * (s(:, n + 1));
+
+                %Gux
+                Gxu =P+ A.' * S(:, :,n + 1) * B;
+                Gux =P+ B.' * S(:, :,n + 1) * A;
+                %Guu
+                Guu = obj.R + B.' * S(:, :, n + 1) * B;
+                L(:, :, n) = -pinv(Guu) * Gux; %K
+                l(:, n) = -pinv(Guu) * gu; %d
+
+                Gxx = obj.Q + A.' * S(:, :, n + 1) * A;
+
+
+                S(:,:, n) = Gxx + L(:, :,n).' * Guu * L(:,:,n) + Gxu * L(:, :,n) + L(:, :,n).' * Gux;
+                s(:, n) = gx + L(:, :,n).' * gu + L(:, :,n).' * Guu * l(:, n) + Gxu * l(:, n);
+    
+            end
 
         end %function
 
         %% Forward Shoot
-        function [x, u] = forward_shoot(obj,ix,  u, L, l, x_old)
-            n_states = length(ix);
-            x = repmat(ix, 1, obj.horizon_disc);
+        function [x, u] = forward_shoot(obj,x,  u, x_old,L, l)
             for n = 1:obj.horizon_disc - 1
                 u(:, n) = u(:, n) + l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n));
                 x(:, n + 1) = obj.dynamics_rk4(x(:, n), u(:,n));
