@@ -17,7 +17,7 @@ function CartPend_main(Q, R, wclose)
     clc;
     % global u;
     u = [0,0];
-    y = [0.2; 0; 0; 0]; %initial point
+    y = [0.7; 0; 0.1; 0]; %initial point
     t = 0.01; %initial time
     tf = 15; %final time
     dt = 0.01; %increasing time %time step
@@ -32,18 +32,20 @@ function CartPend_main(Q, R, wclose)
     y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
 
     il=iLQR_GNMS(CartPend(),Q,R,Q);
-    il.order=[1,3,nan,nan;2,4,nan,nan;5,6,7,8];
-    il.names=["x", "dx", "phi", "dphi","defx","defdx","defphi","defdphi"];   
+    il.order=[1,3,nan,nan;2,4,nan,nan];
+    il.names=["x", "dx", "phi", "dphi"];   
     il.plot_steps=10;  
-    il.plot_start=false;
+    il.plot_start=true;
     il.plot_end=false;
+    il.plot_duration=0;
+
     %il.pieces=16;
 
     while t < tf-5
         %find u control
         t_disc=floor(t / dt);
         y_des = traj_d(:, t_disc);
-        u = il.iLQR_function(y,traj_d(:,t_disc:end),t,u);
+        u = il.MS_iLQR(y,traj_d(:,t_disc:end),t,u);
         %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t,u);
         %u = LQR_function(y, y_des, Q, R);
         %save to plot

@@ -1,4 +1,4 @@
-function ExSys_main(Q, R, wclose)
+function ExSys_main_ssilqr(Q, R, wclose)
     %if arg are less then 3 set wclose(close windows) to false
     if nargin < 3
         wclose = 0;
@@ -20,7 +20,7 @@ function ExSys_main(Q, R, wclose)
     u =-4;
     y = 1.5; %initial point
     t = 0.01; %initial time
-    tf = 8; %final time
+    tf = 15; %final time
     dt = 0.01; %increasing time %time step
 
     time = t:dt:tf+dt; %time array
@@ -35,23 +35,21 @@ function ExSys_main(Q, R, wclose)
     il=iLQR_GNMS(ExSys(),Q,R,Qn);
     il.order=[1];
     il.names=["x"];   
-    il.plot_steps=inf;  
-    il.plot_start=false;
+    il.plot_steps=1;  
+    il.plot_start=true;
     il.plot_end=true;
     il.pieces=5;
     il.horizon=2.99;
-    il.defects_max=1e-5;
+    il.defects_max=il.defects_max*1e-6;
     il.plot_duration=0;
 
     while t < tf-5
         %find u control
         t_disc=floor(t / dt);
         y_des = traj_d(:, t_disc);
-        u =-2;
-        u = il.MS_iLQR(y,traj_d(:,t_disc:end),t,u);
-        %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t,u);
+        u =-4;
+        u = il.SS_iLQR(y,traj_d(:,t_disc:end),t,u);
         %u = LQR_function(y, y_des, Q, R);
-        %save to plot
         u_next=u(:,1);
 
 

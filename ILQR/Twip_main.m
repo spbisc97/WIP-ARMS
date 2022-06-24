@@ -31,18 +31,20 @@ function Twip_main(Q, R, wclose)
     time_array = [t]; %array del tempo (dovrebbe coincidere con la l'array "time")
     y_d_array = traj_d(:,1); %array della traiettoria (dovrebbe coincidere con la l'array "traj_d")
     il=iLQR_GNMS(Twip(),Q,R,Q);
-    il.order=[1,2,nan,nan,nan,nan;3,4,nan,nan,nan,nan;5,6,nan,nan,nan,nan;7,8,9,10,11,12];
+    il.order=[1,2,nan,nan,nan,nan;3,4,nan,nan,nan,nan;5,6,nan,nan,nan,nan];
     il.names=["phi","dphi","x" "dx", "theta","dtheta"];
 
-    il.plot_steps=3;
+    il.plot_steps=1;
     il.plot_start=true;
     il.plot_end=true;
+    il.plot_duration=0;
+
     
     while t < tf-5
         %find u control
         t_disc=floor(t / dt);
         y_des = traj_d(:, t_disc);
-        u = il.iLQR_function(y,traj_d(:,t_disc:end),t,u);
+        u = il.MS_iLQR(y,traj_d(:,t_disc:end),t,u);
         %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t,u);
         %u = LQR_function(y, y_des, Q, R);
         %save to plot
