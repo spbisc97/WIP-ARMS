@@ -15,6 +15,7 @@ classdef iLQR_GNMS
         plot_end = true ;
         dt=0.01
         plot_duration=0;
+        plot_figure
     end
     methods
         %% Dynamics
@@ -103,7 +104,7 @@ classdef iLQR_GNMS
             [state_array, defects, u] = forward_multi_shoot(obj, state_array, u, state_array, L, l);
 
             if obj.plot_start
-                obj.plot_xu(state_array, u, time_array, obj.names,state_d,defects,obj.order,"multi start",obj.plot_duration)
+                obj.plot_xu(state_array, u, time_array, obj.names,state_d,defects,obj.order,"multi start",obj.plot_duration,obj.plot_figure)
             end
             J = obj.cost(state_array, state_d, new_u) * 1e3;
             new_J = J;
@@ -118,7 +119,7 @@ classdef iLQR_GNMS
 
                 if mod(iteration, obj.plot_steps) == 0
 
-                    obj.plot_xu( new_state_array, new_u, time_array, obj.names, state_d,defects, obj.order, "linear",obj.plot_duration)
+                    obj.plot_xu( new_state_array, new_u, time_array, obj.names, state_d,defects, obj.order, "linear",obj.plot_duration,obj.plot_figure)
                 end
 
 
@@ -126,7 +127,7 @@ classdef iLQR_GNMS
 
                 %plot before exit to understand what is happening
                 if mod(iteration, obj.plot_steps) == 0
-                    obj.plot_xu(new_state_array, new_u, time_array,obj.names, state_d,new_defects,obj.order, "multi",obj.plot_duration)
+                    obj.plot_xu(new_state_array, new_u, time_array,obj.names, state_d,new_defects,obj.order, "multi",obj.plot_duration,obj.plot_figure)
 
                 end
 
@@ -178,7 +179,7 @@ classdef iLQR_GNMS
 
                 if (((relative < j_rm)) && all((sum(abs(new_defects), 2)) < obj.defects_max))
                     if obj.plot_end
-                        obj.plot_xu(new_state_array, new_u, time_array, obj.names, state_d, defects,obj.order, "final",obj.plot_duration)
+                        obj.plot_xu(new_state_array, new_u, time_array, obj.names, state_d, defects,obj.order, "final",obj.plot_duration,obj.plot_figure)
                     end
                     return
                 end
@@ -221,7 +222,7 @@ classdef iLQR_GNMS
             l = zeros(n_controls, obj.horizon_disc); % size depends from the number of controls
             [state_array, u] = forward_shoot(obj, state_array, u, state_array, L, l);
             if obj.plot_start
-                obj.plot_xu(state_array, u, time_array, obj.names,state_d,[],obj.order,"start",obj.plot_duration)
+                obj.plot_xu(state_array, u, time_array, obj.names,state_d,[],obj.order,"start",obj.plot_duration,obj.plot_figure)
             end
             J = obj.cost(state_array, state_d, new_u);
             new_J = J;
@@ -237,7 +238,7 @@ classdef iLQR_GNMS
 
                 %plot before exit to understand what is happening
                 if mod(iteration, obj.plot_steps) == 0
-                    obj.plot_xu(new_state_array, new_u, time_array,obj.names, state_d,[],obj.order, "ss ilqr",obj.plot_duration)
+                    obj.plot_xu(new_state_array, new_u, time_array,obj.names, state_d,[],obj.order, "ss ilqr",obj.plot_duration,obj.plot_figure)
 
                 end
 
@@ -287,7 +288,7 @@ classdef iLQR_GNMS
 
                 if (((relative < j_rm)))
                     if obj.plot_end
-                        obj.plot_xu(new_state_array, new_u, time_array, obj.names, state_d, [],obj.order, "final",obj.plot_duration)
+                        obj.plot_xu(new_state_array, new_u, time_array, obj.names, state_d, [],obj.order, "final",obj.plot_duration,obj.plot_figure)
                     end
                     return
                 end
@@ -529,7 +530,7 @@ classdef iLQR_GNMS
         %% Plot
     end
     methods(Static)
-        function plot_xu(x, u, time_array, names, xd,defects,order, type,plot_duration)
+        function plot_xu(x, u, time_array, names, xd,defects,order, type,plot_duration,plot_figure)
 
             %plot_xu(x, u, time_array, names,xd,order)
             if type == ""
@@ -560,11 +561,18 @@ classdef iLQR_GNMS
             end
 
             if nargin < 8
-                type = 'figure';
+                type = 'GNMS_iLQR';
             end
             if nargin < 9
                 plot_duration = inf;
             end
+            if nargin < 10 || isempty(plot_figure)% || class(plot_figure)~="matlab.ui.Figure"
+                figure_name="GNMS_iLQR";
+            else
+                set(0,'currentfigure',plot_figure)
+                figure_name=plot_figure.Name;
+            end
+
             
             [h, l] = size(order);
 
@@ -652,7 +660,7 @@ classdef iLQR_GNMS
             else
                 pause(plot_duration)
             end
-            set(gcf, 'Name', type, 'NumberTitle', 'off')
+            set(gcf, 'Name', figure_name, 'NumberTitle', 'off')
         end %function
 
 
