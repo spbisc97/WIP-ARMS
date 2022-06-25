@@ -115,7 +115,7 @@ classdef iLQR_GNMS
             for iteration = 1:iterations - 1
                 [L, l, A_, B_] = backward(obj,n_states,  defects, state_array, state_d, u);
                 
-                [new_state_array, new_u] = forward_linear_shoot(obj, state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
+                [new_state_array, new_u] = forward_linear_shoot(obj, state_array,state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
 
                 if mod(iteration, obj.plot_steps) == 0
 
@@ -422,26 +422,18 @@ classdef iLQR_GNMS
         end %function
 
         %% Forward Linear Shoot
-        function [x, u] = forward_linear_shoot(obj, x_old, u, L, l, defects, A_, B_, ~)
-            x = x_old;
+        function [x, u] = forward_linear_shoot(obj,x, x_old, u, L, l, defects, A_, B_, ~)
             [n_states, ~] = size(x); %#ok
-
-            %x(:, 1) = ix; %initial state
-
             for n = 1:obj.horizon_disc - 1
-                %N = (n_states * n - (n_states - 1)):(n_states * n);
-                traj = 1; %
-                contr= 0;%all(defects(:, n)==0);
+                contr=0;
+                traj=1;
                 u(:, n) = u(:, n) + contr*(l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n)));
-                %                 if J < 1e8
                 A = A_(:, :,n);
                 B = B_(:, :,n);
                 x(:, n + 1) = x_old(:, n + 1) + (defects(:, n)) ... % starting point
                     +traj * ((A + B * L(:, :,n)) * (x(:, n) - x_old(:, n))+B * l(:, n));%adjustment
 
-                %                 else
-                %                     x(:, n + 1) = obj.dynamics_euler(x(:, n), u(:, n), obj.dt);
-                %                 end
+
             end
 
         end %function
