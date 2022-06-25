@@ -1,12 +1,12 @@
 function CartPend_main_compare(Q, R, wclose)
     %if arg are less then 3 set wclose(close windows) to false
-    if nargin < 3
+    if nargin < 3 |isempty(wclose)
         wclose = 0;
     end
-    if nargin < 2
+    if nargin < 2 || isempty(R)
         R=0.0001;
     end
-    if nargin <1
+    if nargin <1 || isempty(Q)
         Q=diag([10,1,10,1]);
     end
 
@@ -34,26 +34,22 @@ function CartPend_main_compare(Q, R, wclose)
     il=iLQR_GNMS(CartPend(),Q,R,Q);
     il.order=[1,3,nan,nan;2,4,nan,nan];
     il.names=["x", "dx", "phi", "dphi"];   
-    il.plot_steps=1000000;  
+    il.plot_steps=100000;  
     il.plot_start=false;
     il.plot_end=true;
     il.plot_duration=0;
-    il.defects_max=1e-3;
+    il.defects_max=1e-5;
 
     il_ss=il;
     il_ms=il;
     il_ms_1=il;
-    il_ss.plot_figure=figure("name","SS");
-    il_ms.plot_figure=figure("name","MS");
-    il_ms_1.plot_figure=figure("name","MS_1");
     il_ms_1.pieces=1;
 
 
-
-
-
-
-
+    %define plot location
+    il_ss.plot_figure=figure("name","SS",'units','normalized','OuterPosition',[0 0  .33 1]);
+    il_ms.plot_figure=figure("name","MS",'units','normalized','OuterPosition',[0.33 0  .33 1]);
+    il_ms_1.plot_figure=figure("name","MS_1",'units','normalized','OuterPosition',[0.66 0  .33 1]);
 
     %il.pieces=16;
     tic
