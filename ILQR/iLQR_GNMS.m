@@ -492,10 +492,9 @@ classdef iLQR_GNMS
                 end
                 %len(i-1)+1:len(i):
                 for elem = inizio:fine
-                    n = t;
                     %N = (n_states * n - (n_states - 1)):(n_states * n);
-                    us(:, n) = u(:, n) + (k(i) * l(:, n) + L(:,:,n) * (stato(:, t) - x_old(:, n)));
-                    stato(:, t + 1) = obj.dynamics_rk4(stato(:, t), us(:, elem));
+                    us(:, t) = u(:, t) + (k(i) * l(:, t) + L(:,:,t) * (stato(:, t) - x_old(:, t)));
+                    stato(:, t + 1) = obj.dynamics_rk4(stato(:, t), us(:, t));
                     t = t + 1;
                 end
 

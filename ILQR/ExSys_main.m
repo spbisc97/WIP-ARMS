@@ -35,19 +35,19 @@ function ExSys_main(Q, R, wclose)
     il=iLQR_GNMS(ExSys(),Q,R,Qn);
     il.order=[1];
     il.names=["x"];   
-    il.plot_steps=inf;  
+    il.plot_steps=1;  
     il.plot_start=false;
-    il.plot_end=true;
+    il.plot_end=false;
     il.pieces=5;
     il.horizon=2.99;
     il.defects_max=1e-5;
-    il.plot_duration=0;
+    il.plot_duration=0.1;
 
     while t < tf-5
         %find u control
         t_disc=floor(t / dt);
         y_des = traj_d(:, t_disc);
-        u =-2;
+        u =-4;
         u = il.MS_iLQR(y,traj_d(:,t_disc:end),t,u);
         %u = iLQR_DDP_function(y, traj_d(:, floor(t / dt):end), t,u);
         %u = LQR_function(y, y_des, Q, R);
