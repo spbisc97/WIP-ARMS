@@ -1,20 +1,40 @@
 classdef iLQR_GNMS
     properties
-        Q double = 1
-        R double = 0.1
-        Qn double =1
+        %running cost multiplier
+        Q  = 1
+        %control cost multiplier
+        R = 0.1
+        %final cost multiplier
+        Qn  =1
+        %number of pieces for multishooting, equal to one when
+        %using SS functions
         pieces  =16
-        defects_max double =0.001
+        %defects max, can be set as single double or a vertical
+        %array with same lenght of the states
+        defects_max =0.001
+        %prevision horizon
         horizon double = 10;
+        %horzon discretized, the steps number, automatically
+        %updated when defects max is changed
         horizon_disc=1001
+        %the order for printing states, same line same tile, fill
+        %empty with nan: [1,2,nan,nan;3,4,5,6]
         order=[]
+        %the names of the variables ordered as x
         names=[]
+        %system model to optimize
         model
+        %how often print the iteration,1 for each time
         plot_steps  = 1;
+        %plot the initial start without control
         plot_start  =true ;
+        %plot the end configuration
         plot_end = true ;
+        %dt of optimizer, needs to be the same of the model
         dt=0.01
+        %pause after each plot, inf to need button press to skip
         plot_duration=0;
+        %optional: figure where the plots will be drown
         plot_figure
     end
     methods
