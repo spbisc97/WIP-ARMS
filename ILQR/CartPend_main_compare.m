@@ -1,7 +1,7 @@
 function CartPend_main_compare(Q, R, wclose)
     %if arg are less then 3 set wclose(close windows) to false
-    if nargin < 3 |isempty(wclose)
-        wclose = 0;
+    if nargin < 3 ||isempty(wclose)
+        wclose = 1;
     end
     if nargin < 2 || isempty(R)
         R=0.0001;
@@ -16,7 +16,7 @@ function CartPend_main_compare(Q, R, wclose)
 
     clc;
     % global u;
-    u = [0,0];
+    u = 0;
     y = [-1; 0; pi; 0]; %initial point
     t = 0.01; %initial time
     tf = 15; %final time
@@ -34,7 +34,7 @@ function CartPend_main_compare(Q, R, wclose)
     il=iLQR_GNMS(CartPend(),Q,R,Q);
     il.order=[1,3,nan,nan;2,4,nan,nan];
     il.names=["x", "dx", "phi", "dphi"];   
-    il.plot_steps=100000;  
+    il.plot_steps=1000000;  
     il.plot_start=false;
     il.plot_end=true;
     il.plot_duration=0;
