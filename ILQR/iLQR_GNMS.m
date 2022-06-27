@@ -487,7 +487,7 @@ classdef iLQR_GNMS
             statess = zeros(n_states, obj.horizon_disc, obj.pieces);
             uss = zeros(n_controls, obj.horizon_disc - 1, obj.pieces);
 
-            parfor i = 1:obj.pieces
+            for i = 1:obj.pieces
 
                 stato = zeros(n_states, obj.horizon_disc);
                 us = zeros(n_controls, obj.horizon_disc - 1);

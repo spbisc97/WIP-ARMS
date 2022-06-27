@@ -39,6 +39,7 @@ function CartPend_main_compare(Q, R, wclose)
     il.plot_end=true;
     il.plot_duration=0;
     il.defects_max=1e-5;
+    il.horizon=3;
 
     il_ss=il;
     il_ms=il;
@@ -60,7 +61,7 @@ function CartPend_main_compare(Q, R, wclose)
     u_ss = il_ss.SS_iLQR(y,traj_d(:,1:end),t,u);
     ss_time=toc;
     tic
-    u_ms_1 = il_ms_1.SS_iLQR(y,traj_d(:,1:end),t,u);
+    u_ms_1 = il_ms_1.MS_iLQR(y,traj_d(:,1:end),t,u);
     ms_1_time=toc;
     disp("times")
 

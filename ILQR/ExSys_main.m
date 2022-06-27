@@ -36,12 +36,12 @@ function ExSys_main(Q, R, wclose)
     il.order=[1];
     il.names=["x"];   
     il.plot_steps=1;  
-    il.plot_start=false;
-    il.plot_end=false;
+    il.plot_start=true;
+    il.plot_end=true;
     il.pieces=5;
     il.horizon=2.99;
     il.defects_max=1e-5;
-    il.plot_duration=0.1;
+    il.plot_duration=0;
 
     while t < tf-5
         %find u control
