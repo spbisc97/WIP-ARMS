@@ -4,3 +4,4 @@
 *.mat
 .fuse_hidden*
 .xdp*
+codegen
