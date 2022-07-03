@@ -53,7 +53,7 @@ classdef iLQR_GNMS
         end %function
 
         function obj=set.horizon(obj,horizon)
-            if horizon<0 
+            if horizon<0
                 error("horizon has to be positive")
             else
                 obj.horizon=horizon;
@@ -71,8 +71,9 @@ classdef iLQR_GNMS
             if nargin > 2
                 obj.Q=Q;
                 obj.R=R;
+                obj.Qn=Q;
             end
-            obj.Qn=Q;
+
             if nargin > 3
                 obj.Qn=Qn;
             end
@@ -134,7 +135,7 @@ classdef iLQR_GNMS
             %start the optimizing iterations
             for iteration = 1:iterations - 1
                 [L, l, A_, B_] = backward(obj,n_states,  defects, state_array, state_d, u);
-                
+
                 [new_state_array, new_u] = forward_linear_shoot(obj, state_array,state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
 
                 if mod(iteration, obj.plot_steps) == 0
@@ -436,7 +437,7 @@ classdef iLQR_GNMS
         %% Forward Shoot
         function [x, u] = forward_shoot(obj,x,  u, x_old,L, l)
             for n = 1:obj.horizon_disc - 1
-                u(:, n) = u(:, n) + l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n));
+                u(:, n) = u(:, n) + l(:, n)+ L(:, :,n) * (x(:, n) - x_old(:, n));
                 x(:, n + 1) = obj.dynamics_rk4(x(:, n), u(:,n));
             end
         end %function
@@ -487,38 +488,8 @@ classdef iLQR_GNMS
             statess = zeros(n_states, obj.horizon_disc, obj.pieces);
             uss = zeros(n_controls, obj.horizon_disc - 1, obj.pieces);
 
-            for i = 1:obj.pieces
-
-                stato = zeros(n_states, obj.horizon_disc);
-                us = zeros(n_controls, obj.horizon_disc - 1);
-
-                t = len * (i - 1) + 1;
-                t = t + (t == 0); %skip if t==0
-                inizio = t;
-
-                stato(:, inizio) = x_start(:, i);
-
-                if i == obj.pieces %if is last piece do till the end
-                    fine = obj.horizon_disc - 1;
-                else
-                    fine = len * (i);
-                end
-                %len(i-1)+1:len(i):
-                for elem = inizio:fine
-                    %N = (n_states * n - (n_states - 1)):(n_states * n);
-                    us(:, t) = u(:, t) + (k(i) * l(:, t) + L(:,:,t) * (stato(:, t) - x_old(:, t)));
-                    stato(:, t + 1) = obj.dynamics_rk4(stato(:, t), us(:, t));
-                    t = t + 1;
-                end
-
-                x_arrive(:, i) = stato(:, t);
-
-                if fine ~= (obj.horizon_disc - 1)
-                    stato(:, t) = stato(:, t) * 0;
-                end
-
-                uss(:, :, i) = us(:, :);
-                statess(:, :, i) = stato(:, :);
+            parfor i = 1:obj.pieces
+                [ x_arrive(:, i) ,uss(:, :, i) ,statess(:, :, i)]=multi_aux(obj,i,x_start,len,x_old,u,l,L,n_states,n_controls);
             end
 
             x = zeros(n_states, obj.horizon_disc);
@@ -538,7 +509,37 @@ classdef iLQR_GNMS
             defects = circshift(defects, -1, 2);
         end %function
 
-        %% Plot
+
+        function [x_arrive,us,stato]=multi_aux(obj,i,x_start,len,x_old,u,l,L,n_states,n_controls)
+            stato = zeros(n_states, obj.horizon_disc);
+            us = zeros(n_controls, obj.horizon_disc - 1);
+            t = len * (i - 1) + 1;
+            t = t + (t == 0); %skip if t==0
+            inizio = t;
+
+            stato(:, inizio) = x_start(:, i);
+
+            if i == obj.pieces %if is last piece do till the end
+                fine = obj.horizon_disc - 1;
+            else
+                fine = len * (i);
+            end
+            %len(i-1)+1:len(i):
+            for elem = inizio:fine
+                %N = (n_states * n - (n_states - 1)):(n_states * n);
+                us(:, t) = u(:, t) + (l(:, t) + L(:,:,t) * (stato(:, t) - x_old(:, t)));
+                stato(:, t + 1) = obj.dynamics_rk4(stato(:, t), us(:, t));
+                t = t + 1;
+            end
+
+            x_arrive= stato(:, t);
+
+            if fine ~= (obj.horizon_disc - 1)
+                stato(:, t) = stato(:, t) * 0;
+            end
+
+            
+        end
     end
     methods(Static)
         function plot_xu(x, u, time_array, names, xd,defects,order, type,plot_duration,plot_figure)
