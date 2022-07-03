@@ -11,6 +11,7 @@ classdef CartPend < Model
     methods (Static)
 
         function new_state = euler_integration_fun(state, dy, dt)
+            new_state=[];
             %integrate as euler
             %%test with single value
             %new_state=state+dy*dt;
@@ -26,6 +27,7 @@ classdef CartPend < Model
         function dy = ForwardDynamics(y, u)
             u=u(:);
             y=y(:);
+            dy=zeros(4,1);
 
             m = 1;
         M = 5;
@@ -61,7 +63,7 @@ classdef CartPend < Model
             y3 = y(3); %angolo phi
             y4 = y(4); %velocità angolare phi
             Ts = 0.01;
-           
+
             % sys=[y(2),(1/D)*(-m^2*L^2*g*cos(y(3))*sin(y(3)) + m*L^2*(m*L*y(4)^2*sin(y(3)) - d*y(2))) + m*L*L*(1/D)*u,y(4),(1/D)*((m+M)*m*g*L*sin(y(3)) - m*L*cos(y(3))*(m*L*y(4)^2*sin(y(3)) - d*y(2))) - m*L*cos(y(3))*(1/D)*u]
 
             A = [
