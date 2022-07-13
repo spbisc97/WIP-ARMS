@@ -52,7 +52,7 @@ function CartPend_main_compare(Q, R, wclose)
     il_ms.plot_figure=figure("name","MS",'units','normalized','OuterPosition',[0.33 0  .33 1]);
     il_ms_1.plot_figure=figure("name","MS_1",'units','normalized','OuterPosition',[0.66 0  .33 1]);
 
-    %il.pieces=16;
+    il_ms.pieces=16;
     tic
 
     u_ms = il_ms.MS_iLQR(y,traj_d(:,1:end),t,u);
