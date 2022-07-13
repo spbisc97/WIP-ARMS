@@ -39,6 +39,7 @@ function CartPend_main_compare(Q, R, wclose)
     il.plot_end=true;
     il.plot_duration=0;
     il.defects_max=1e-5;
+    il.horizon=3;
 
     il_ss=il;
     il_ms=il;
@@ -60,55 +61,15 @@ function CartPend_main_compare(Q, R, wclose)
     u_ss = il_ss.SS_iLQR(y,traj_d(:,1:end),t,u);
     ss_time=toc;
     tic
-    u_ms_1 = il_ms_1.SS_iLQR(y,traj_d(:,1:end),t,u);
+    u_ms_1 = il_ms_1.MS_iLQR(y,traj_d(:,1:end),t,u);
     ms_1_time=toc;
     disp("times")
 
     disp(ms_time)
     disp(ss_time)
     disp(ms_1_time)
-    pause(inf)
 
 
-    while t < il.horizon
-        t_disc=floor(t / dt);
-        
-        %u = LQR_function(y, y_des, Q, R);
-        %save to plot
-        u_next=u(:,t_disc);
-
-
-
-        control_array = [control_array, u_next];
-
-        %compute dynamics
-
-        
-        y = dynamics_rk4(y, u_next, dt);
-        state_array = [state_array, y];
-        y_d_array = [y_d_array, y_des];
-        t = t + dt; %time increment
-        time_array = [time_array, t];
-
-    end
-
-    save('mainVars.mat') % save variables to
-    tiledlayout(3, 1)
-    nexttile
-    plot(time_array, state_array)
-    hold on
-    plot(time_array, y_d_array)
-    legend("x", "dx", "phi", "dphi", "d-x", "d-dx", "d-phi", "d-dphi")
-    title("trajectory and desired trajectory")
-
-    nexttile
-    plot(time_array, y_d_array - state_array)
-    legend("x", "dx", "phi", "dphi")
-    title("error trajectory")
-
-    nexttile
-    plot(time_array, [control_array, 0])
-    title("controls")
 end
 
 function state = dynamics_rk4(state, u, dt)
