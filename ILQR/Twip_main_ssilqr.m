@@ -26,6 +26,7 @@ function Twip_main_ssilqr(Q, R, wclose)
     %traj_d=-0.06*(time-1.7).^5+0.6; %desired trajectory
     traj_d = repmat([0; 0; 1; 0;0;0], [1, (tf / dt)+1]);
     traj_d(5,:)=-2*sin(time); %desired trajectory
+    traj_d(6,:)=-2*cos(time); %desired trajectory
     state_array = [y]; %array degli stati
     control_array = []; %array del controllo
     time_array = [t]; %array del tempo (dovrebbe coincidere con la l'array "time")
@@ -34,9 +35,11 @@ function Twip_main_ssilqr(Q, R, wclose)
     il.order=[1,2,nan,nan,nan,nan;3,4,nan,nan,nan,nan;5,6,nan,nan,nan,nan];
     il.names=["phi","dphi","x" "dx", "theta","dtheta"];
 
-    il.plot_steps=inf;
+    il.plot_steps=100000;
     il.plot_start=false;
     il.plot_end=true;
+    il.plot_duration=0;
+
     while t < tf-5
         %find u control
         t_disc=floor(t / dt);
