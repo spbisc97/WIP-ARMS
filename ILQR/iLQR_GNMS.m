@@ -487,9 +487,14 @@ classdef iLQR_GNMS
 
             statess = zeros(n_states, obj.horizon_disc, obj.pieces);
             uss = zeros(n_controls, obj.horizon_disc - 1, obj.pieces);
-
-            parfor i = 1:obj.pieces
+            if coder.target('MATLAB')
+                for i = 1:obj.pieces
+                    [ x_arrive(:, i) ,uss(:, :, i) ,statess(:, :, i)]=multi_aux(obj,i,x_start,len,x_old,u,l,L,n_states,n_controls);
+                end
+            else
+                parfor i = 1:obj.pieces
                 [ x_arrive(:, i) ,uss(:, :, i) ,statess(:, :, i)]=multi_aux(obj,i,x_start,len,x_old,u,l,L,n_states,n_controls);
+                end
             end
 
             x = zeros(n_states, obj.horizon_disc);
