@@ -53,7 +53,7 @@ classdef iLQR_GNMS
         end %function
 
         function obj=set.horizon(obj,horizon)
-            if horizon<0
+            if horizon<0 
                 error("horizon has to be positive")
             else
                 obj.horizon=horizon;
@@ -135,7 +135,7 @@ classdef iLQR_GNMS
             %start the optimizing iterations
             for iteration = 1:iterations - 1
                 [L, l, A_, B_] = backward(obj,n_states,  defects, state_array, state_d, u);
-
+                
                 [new_state_array, new_u] = forward_linear_shoot(obj, state_array,state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
 
                 if mod(iteration, obj.plot_steps) == 0
@@ -437,7 +437,7 @@ classdef iLQR_GNMS
         %% Forward Shoot
         function [x, u] = forward_shoot(obj,x,  u, x_old,L, l)
             for n = 1:obj.horizon_disc - 1
-                u(:, n) = u(:, n) + l(:, n)+ L(:, :,n) * (x(:, n) - x_old(:, n));
+                u(:, n) = u(:, n) + l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n));
                 x(:, n + 1) = obj.dynamics_rk4(x(:, n), u(:,n));
             end
         end %function
