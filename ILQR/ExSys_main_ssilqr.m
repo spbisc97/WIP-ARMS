@@ -4,7 +4,7 @@ function ExSys_main_ssilqr(Q, R, wclose)
         wclose = 0;
     end
     if nargin < 2
-        R=0.001;
+        R=0.1;
     end
     if nargin <1
         Q=0;

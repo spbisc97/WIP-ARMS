@@ -445,13 +445,14 @@ classdef iLQR_GNMS
         %% Forward Linear Shoot
         function [x, u] = forward_linear_shoot(obj,x, x_old, u, L, l, defects, A_, B_, ~)
             [n_states, ~] = size(x); %#ok
+            x(:, 1)=x_old(:, 1);
             for n = 1:obj.horizon_disc - 1
                 contr=0;
                 traj=1;
                 u(:, n) = u(:, n) + contr*(l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n)));
                 A = A_(:, :,n);
                 B = B_(:, :,n);
-                x(:, n + 1) = x_old(:, n + 1) + (defects(:, n)) ... % starting point
+                x(:, n + 1) = x_old(:, n + 1) + defects(:,n) ... % starting point
                     +traj * ((A + B * L(:, :,n)) * (x(:, n) - x_old(:, n))+B * l(:, n));%adjustment
 
 
