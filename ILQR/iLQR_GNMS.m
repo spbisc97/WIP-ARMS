@@ -124,8 +124,8 @@ classdef iLQR_GNMS
             l = zeros(n_controls, obj.horizon_disc); % size depends from the number of controls
             [state_array, defects, u] = forward_multi_shoot(obj, state_array, u, state_array, L, l);
 
-            if obj.plot_start
-                obj.plot_xu(state_array, u, time_array, obj.names,state_d,defects,obj.order,"multi start",obj.plot_duration,obj.plot_figure)
+            if obj.plot_start && coder.target('MATLAB')
+                plot_xu(state_array, u, time_array, obj.names,state_d,defects,obj.order,"multi start",obj.plot_duration,obj.plot_figure)
             end
             J = obj.cost(state_array, state_d, new_u) * 1e3;
             new_J = J;
@@ -138,17 +138,17 @@ classdef iLQR_GNMS
                 
                 [new_state_array, new_u] = forward_linear_shoot(obj, state_array,state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
 
-                if mod(iteration, obj.plot_steps) == 0
+                if mod(iteration, obj.plot_steps) == 0 && coder.target('MATLAB')
 
-                    obj.plot_xu( new_state_array, new_u, time_array, obj.names, state_d,defects, obj.order, "linear",obj.plot_duration,obj.plot_figure)
+                    plot_xu( new_state_array, new_u, time_array, obj.names, state_d,defects, obj.order, "linear",obj.plot_duration,obj.plot_figure)
                 end
 
 
                 [new_state_array, new_defects, new_u] = obj.forward_multi_shoot(new_state_array, new_u, state_array, lmb*L, alpha*l);
 
                 %plot before exit to understand what is happening
-                if mod(iteration, obj.plot_steps) == 0
-                    obj.plot_xu(new_state_array, new_u, time_array,obj.names, state_d,new_defects,obj.order, "multi",obj.plot_duration,obj.plot_figure)
+                if mod(iteration, obj.plot_steps) == 0 && coder.target('MATLAB')
+                    plot_xu(new_state_array, new_u, time_array,obj.names, state_d,new_defects,obj.order, "multi",obj.plot_duration,obj.plot_figure)
 
                 end
 
@@ -199,8 +199,8 @@ classdef iLQR_GNMS
                 end
 
                 if (((relative < j_rm)) && all((sum(abs(new_defects), 2)) < obj.defects_max))
-                    if obj.plot_end
-                        obj.plot_xu(new_state_array, new_u, time_array, obj.names, state_d, defects,obj.order, "final",obj.plot_duration,obj.plot_figure)
+                    if obj.plot_end && coder.target('MATLAB')
+                        plot_xu(new_state_array, new_u, time_array, obj.names, state_d, defects,obj.order, "final",obj.plot_duration,obj.plot_figure)
                     end
                     return
                 end
@@ -242,8 +242,8 @@ classdef iLQR_GNMS
             L = zeros(n_controls,n_states, obj.horizon_disc ); %size depends both from the number of controls and states
             l = zeros(n_controls, obj.horizon_disc); % size depends from the number of controls
             [state_array, u] = forward_shoot(obj, state_array, u, state_array, L, l);
-            if obj.plot_start
-                obj.plot_xu(state_array, u, time_array, obj.names,state_d,[],obj.order,"start",obj.plot_duration,obj.plot_figure)
+            if obj.plot_start && coder.target('MATLAB')
+                plot_xu(state_array, u, time_array, obj.names,state_d,[],obj.order,"start",obj.plot_duration,obj.plot_figure)
             end
             J = obj.cost(state_array, state_d, new_u);
             new_J = J;
@@ -258,8 +258,8 @@ classdef iLQR_GNMS
                 [new_state_array, new_u] = obj.forward_shoot(new_state_array, new_u, state_array, lmb*L, alpha*l);
 
                 %plot before exit to understand what is happening
-                if mod(iteration, obj.plot_steps) == 0
-                    obj.plot_xu(new_state_array, new_u, time_array,obj.names, state_d,[],obj.order, "ss ilqr",obj.plot_duration,obj.plot_figure)
+                if mod(iteration, obj.plot_steps) == 0 && coder.target('MATLAB')
+                    plot_xu(new_state_array, new_u, time_array,obj.names, state_d,[],obj.order, "ss ilqr",obj.plot_duration,obj.plot_figure)
 
                 end
 
@@ -308,8 +308,8 @@ classdef iLQR_GNMS
                 end
 
                 if (((relative < j_rm)))
-                    if obj.plot_end
-                        obj.plot_xu(new_state_array, new_u, time_array, obj.names, state_d, [],obj.order, "final",obj.plot_duration,obj.plot_figure)
+                    if obj.plot_end && coder.target('MATLAB')
+                        plot_xu(new_state_array, new_u, time_array, obj.names, state_d, [],obj.order, "final",obj.plot_duration,obj.plot_figure)
                     end
                     return
                 end
@@ -545,142 +545,6 @@ classdef iLQR_GNMS
 
             
         end
-    end
-    methods(Static)
-        function plot_xu(x, u, time_array, names, xd,defects,order, type,plot_duration,plot_figure)
-
-            %plot_xu(x, u, time_array, names,xd,order)
-            if type == ""
-                return
-            end
-
-            if nargin < 3
-                error("missing entries")
-            end
-
-            [h, ~] = size(x);
-
-            if nargin < 4 || isempty(names) || length(names)<h
-                init=length(names)+1;
-                names =[names,init:h]; %repmat("", 1, h);
-            end
-
-
-            desired = true;
-
-            if nargin < 5
-                desired = false;
-            end
-
-            if nargin < 7||isempty(order)
-
-                order = (1:h)';
-            end
-
-            if nargin < 8
-                type = 'GNMS_iLQR';
-            end
-            if nargin < 9
-                plot_duration = inf;
-            end
-            if nargin < 10 || isempty(plot_figure)% || class(plot_figure)~="matlab.ui.Figure"
-                figure_name="GNMS_iLQR";
-            else
-                set(0,'currentfigure',plot_figure)
-                figure_name=plot_figure.Name;
-            end
-
-            
-            [h, l] = size(order);
-
-            if isempty(defects)
-                tiles_n=h+1;
-                def=false;
-            else
-                tiles_n=h+2;
-                def=true;
-                defplot  = double(any(circshift(defects,1,2)~=0,1));
-                defplot(defplot==0)=nan;
-            end
-
-
-
-
-
-            tiledlayout(tiles_n, 1,'Padding','Compact','Tilespacing','Compact');
-
-            for i = 1:h
-                nexttile(i)
-                j = 1;
-                lgd = [];
-
-                while j <= l && ~isnan(order(i, j))
-
-                    idx = order(i, j);
-                    plot(time_array, x(idx, :))
-                    hold on
-                    lgd = [lgd, names(idx)+""]; %#ok
-
-                    if def
-                        plot(time_array, x(idx, :).*defplot,"--o")
-                        lgd = [lgd, ""]; %#ok
-                    end
-                    if desired && length(xd(:, 1)) >= idx
-                        plot(time_array, xd(idx, :), LineStyle = "--")
-                        hold on
-                        lgd = [lgd, names(idx) + "_d"]; %#ok
-                    end
-
-                    title(type)
-
-                    j =j+1;
-
-
-
-
-                end
-                legend(lgd,'Location','northeastoutside'); %interpreter =latex
-                ylim('padded')
-                xlim([-inf time_array(end)]);
-                grid minor
-
-
-            end
-            xl = xlim;
-            lgd=[];
-            if def
-                nexttile(h+1)
-                plot(time_array(1:end), defects)
-                for i=names
-                    lgd=[lgd,"def-"+i];
-                end
-                legend(lgd,'Location','northeastoutside')
-                title(type+"  defects")
-                ylim('padded')
-                xlim(xl);
-                grid minor
-            end
-
-
-
-
-            nexttile(tiles_n)
-            plot(time_array(1:end - 1), u)
-            %legend("controls",'Location','northeastoutside')
-            title(type+"   controls")
-            ylim('padded')
-            xlim(xl);
-            grid minor
-
-            if isinf(plot_duration)
-                pause
-            else
-                pause(plot_duration)
-            end
-            set(gcf, 'Name', figure_name, 'NumberTitle', 'off')
-        end %function
-
-
     end
 
 end

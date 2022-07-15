@@ -6,10 +6,12 @@ function CartPend_main_compare(Q, R, wclose)
     if nargin < 2 || isempty(R)
         R=0.001;
     end
+    
     if nargin <1 || isempty(Q)
-        Q=diag([10,1,10,1])*0.01;
-        Qn=diag([10,1,10,1])*10;
-
+        Q=diag([10,1,1,0.1])*0.01;
+        Qn=diag([10,1,10,1])*1000;
+    else
+        Qn=Q*1000;
     end
 
     if (wclose)
@@ -40,7 +42,7 @@ function CartPend_main_compare(Q, R, wclose)
     il.plot_start=false;
     il.plot_end=true;
     il.plot_duration=0;
-    il.defects_max=1e-4;
+    il.defects_max=1e-5;
     il.horizon=3;
 
     il_ss=il;
@@ -50,10 +52,11 @@ function CartPend_main_compare(Q, R, wclose)
 
 
     %define plot location
+    if coder.target('MATLAB')
     il_ss.plot_figure=figure("name","SS",'units','normalized','OuterPosition',[0 0  .33 1]);
     il_ms.plot_figure=figure("name","MS",'units','normalized','OuterPosition',[0.33 0  .33 1]);
     il_ms_1.plot_figure=figure("name","MS_1",'units','normalized','OuterPosition',[0.66 0  .33 1]);
-
+    end
     il_ms.pieces=8;
     tic
 
@@ -72,12 +75,4 @@ function CartPend_main_compare(Q, R, wclose)
     disp(ms_1_time)
 
 
-end
-
-function state = dynamics_rk4(state, u, dt)
-    f1 = CartPend.ForwardDynamics(state, u);
-    f2 = CartPend.ForwardDynamics(state + 0.5 * dt * f1, u);
-    f3 = CartPend.ForwardDynamics(state + 0.5 * dt * f2, u);
-    f4 = CartPend.ForwardDynamics(state + dt * f3, u);
-    state = state + (dt / 6) * (f1 + 2 * f2 + 2 * f3 + f4);
 end
