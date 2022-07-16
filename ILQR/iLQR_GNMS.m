@@ -135,8 +135,8 @@ classdef iLQR_GNMS
             %start the optimizing iterations
             for iteration = 1:iterations - 1
                 [L, l, A_, B_] = backward(obj,n_states,  defects, state_array, state_d, u);
-                
-                [new_state_array, new_u] = forward_linear_shoot(obj, state_array,state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
+                new_u=u;
+                [new_state_array, new_l_u] = forward_linear_shoot(obj, state_array,state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
 
                 if mod(iteration, obj.plot_steps) == 0 && coder.target('MATLAB')
 
@@ -445,8 +445,9 @@ classdef iLQR_GNMS
         %% Forward Linear Shoot
         function [x, u] = forward_linear_shoot(obj,x, x_old, u, L, l, defects, A_, B_, ~)
             [n_states, ~] = size(x); %#ok
+            x(:, 1)=x_old(:, 1);
             for n = 1:obj.horizon_disc - 1
-                contr=0;
+                contr=1;
                 traj=1;
                 u(:, n) = u(:, n) + contr*(l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n)));
                 A = A_(:, :,n);

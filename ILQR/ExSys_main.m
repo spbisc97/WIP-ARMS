@@ -1,13 +1,15 @@
-function ExSys_main(Q, R, wclose)
+function ExSys_main(Q, R,Qn, wclose)
     %if arg are less then 3 set wclose(close windows) to false
-    if nargin < 3
+    if nargin < 4
         wclose = 0;
     end
     if nargin < 2
-        R=0.001;
+        R=0.01;
     end
     if nargin <1
         Q=0;
+    end
+    if nargin <3
         Qn=10;
     end
 
@@ -39,10 +41,10 @@ function ExSys_main(Q, R, wclose)
     il.plot_start=true;
     il.plot_end=true;
     il.pieces=5;
-    il.horizon=2.99;
+    il.horizon=3;
     il.defects_max=1e-5;
-    il.plot_duration=0;
-
+    il.plot_duration=inf;
+    
     while t < tf-5
         %find u control
         t_disc=floor(t / dt);

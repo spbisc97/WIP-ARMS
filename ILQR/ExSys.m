@@ -17,7 +17,7 @@ classdef ExSys < Model
                 discrete = 0;
             end
             Ts=0.01;
-            A=(1+state);
+            A=(1+2*state);
             B=1;
             if discrete == 1
                 n = 1;
