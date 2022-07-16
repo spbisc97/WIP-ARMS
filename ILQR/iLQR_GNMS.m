@@ -140,7 +140,7 @@ classdef iLQR_GNMS
 
                 if mod(iteration, obj.plot_steps) == 0 && coder.target('MATLAB')
 
-                    plot_xu( new_state_array, new_u, time_array, obj.names, state_d,defects, obj.order, "linear",obj.plot_duration,obj.plot_figure)
+                    plot_xu( new_state_array, new_l_u, time_array, obj.names, state_d,defects, obj.order, "linear",obj.plot_duration,obj.plot_figure)
                 end
 
 
@@ -163,10 +163,11 @@ classdef iLQR_GNMS
                 else
                     bad_iterations = bad_iterations + 1;
                 end
-
+                if coder.target("MATLAB")
                 T = table(new_J, J, max(sum(abs(new_defects), 2)), relative, bad_iterations, alpha, 'VariableNames', {'new_cost', 'prev_cost', 'max(sum(def))', 'relative', 'last bad', 'alpha'});
-
+                
                 disp(T)
+                end
 
                 if bad_iterations == 0
                     state_array = new_state_array;
@@ -274,10 +275,11 @@ classdef iLQR_GNMS
                 else
                     bad_iterations = bad_iterations + 1;
                 end
-
+                if coder.target("MATLAB")
                 T = table(new_J, J, relative, bad_iterations, alpha, 'VariableNames', {'new_cost', 'prev_cost', 'relative', 'last bad', 'alpha'});
 
                 disp(T)
+                end
 
                 if bad_iterations == 0
                     state_array = new_state_array;
