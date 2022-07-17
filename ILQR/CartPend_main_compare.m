@@ -1,13 +1,17 @@
-function CartPend_main_compare(Q, R, wclose)
+function CartPend_main_compare(Q, R, Qn, wclose)
     %if arg are less then 3 set wclose(close windows) to false
-    if nargin < 3 ||isempty(wclose)
+    if nargin < 4 ||isempty(wclose)
         wclose = 1;
     end
     if nargin < 2 || isempty(R)
         R=0.001;
     end
+    
     if nargin <1 || isempty(Q)
         Q=diag([10,1,10,1])*0.01;
+        
+    end
+    if nargin <3|| isempty(Q)
         Qn=diag([10,1,10,1])*100;
     end
 
@@ -36,8 +40,8 @@ function CartPend_main_compare(Q, R, wclose)
     il.order=[1,3,nan,nan;2,4,nan,nan];
     if coder.target("MATLAB")
     il.names=["x", "dx", "phi", "dphi"];   
-    il.plot_steps=1000000;  
-    il.plot_start=false;
+    il.plot_steps=1;  
+    il.plot_start=true;
     il.plot_end=true;
     else  
     il.names=[];   
@@ -46,7 +50,7 @@ function CartPend_main_compare(Q, R, wclose)
     il.plot_end=false;
     end
     il.plot_duration=0;
-    il.defects_max=1e-4;
+    il.defects_max=1e-5;
     il.horizon=3;
 
     il_ss=il;
@@ -62,15 +66,32 @@ function CartPend_main_compare(Q, R, wclose)
     il_ms_1.plot_figure=figure("name","MS_1",'units','normalized','OuterPosition',[0.66 0  .33 1]);
     end
     il_ms.pieces=8;
+    time_iterations=1;
+    i = 0;
     tic
-
-    u_ms = il_ms.MS_iLQR(y,traj_d(:,1:end),t,u);
+    while i<time_iterations
+        i=i+1;
+        u = 0;
+        u_ms = il_ms.MS_iLQR(y,traj_d(:,1:end),t,u);
+    end
     ms_time=toc;
+
+    i=0;
     tic
-    u_ss = il_ss.SS_iLQR(y,traj_d(:,1:end),t,u);
+    while i<time_iterations
+        i=i+1;
+        u = 0;
+        u_ss = il_ss.SS_iLQR(y,traj_d(:,1:end),t,u);
+    end
     ss_time=toc;
+    
+    i=0;
     tic
-    u_ms_1 = il_ms_1.MS_iLQR(y,traj_d(:,1:end),t,u);
+    while i<time_iterations
+        i=i+1;
+        u = 0;
+        u_ms_1 = il_ms_1.MS_iLQR(y,traj_d(:,1:end),t,u);
+    end
     ms_1_time=toc;
     disp("times")
 
@@ -79,12 +100,4 @@ function CartPend_main_compare(Q, R, wclose)
     disp(ms_1_time)
 
 
-end
-
-function state = dynamics_rk4(state, u, dt)
-    f1 = CartPend.ForwardDynamics(state, u);
-    f2 = CartPend.ForwardDynamics(state + 0.5 * dt * f1, u);
-    f3 = CartPend.ForwardDynamics(state + 0.5 * dt * f2, u);
-    f4 = CartPend.ForwardDynamics(state + dt * f3, u);
-    state = state + (dt / 6) * (f1 + 2 * f2 + 2 * f3 + f4);
 end
