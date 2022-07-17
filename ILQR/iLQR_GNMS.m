@@ -86,7 +86,7 @@ classdef iLQR_GNMS
         end %function
 
         %%main functions
-        function u = MS_iLQR(obj,istate, state_d, it, u)
+        function [u,iteration,forward_time,linear_time] = MS_iLQR(obj,istate, state_d, it, u)
             %global u %use global u to remember last optimized values
             [n_states, sz] = size(state_d);
             [n_controls, ~] = size(u);
@@ -131,21 +131,24 @@ classdef iLQR_GNMS
                 disp(J)
             end
 
-
+            forward_time=0;
+            linear_time=0;
             %start the optimizing iterations
             for iteration = 1:iterations - 1
                 [L, l, A_, B_] = backward(obj,n_states,  defects, state_array, state_d, u);
                 new_u=u;
+                timerVal = tic;
                 [new_state_array, new_l_u] = forward_linear_shoot(obj, state_array,state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
-
+                linear_time=linear_time+toc(timerVal);
                 if mod(iteration, obj.plot_steps) == 0 && coder.target('MATLAB')
 
                     plot_xu( new_state_array, new_l_u, time_array, obj.names, state_d,defects, obj.order, "linear",obj.plot_duration,obj.plot_figure)
                 end
 
+                timerVal = tic;
 
                 [new_state_array, new_defects, new_u] = obj.forward_multi_shoot(new_state_array, new_u, state_array, lmb*L, alpha*l);
-
+                forward_time=forward_time+toc(timerVal);
                 %plot before exit to understand what is happening
                 if mod(iteration, obj.plot_steps) == 0 && coder.target('MATLAB')
                     plot_xu(new_state_array, new_u, time_array,obj.names, state_d,new_defects,obj.order, "multi",obj.plot_duration,obj.plot_figure)
@@ -188,13 +191,17 @@ classdef iLQR_GNMS
                     else
                         alpha = alpha / 2;
                         lmb = 1;
-                        continue
+                        if bad_iterations > 20
+                            return
+                         end
+                         continue
                     end
 
                 end
 
                 if bad_iterations > 20
                     relative = 0;
+                    return
 
                 else
                 end
@@ -210,7 +217,7 @@ classdef iLQR_GNMS
 
         end %function
 
-        function u = SS_iLQR(obj,istate, state_d, it, u)
+        function [u,iteration,forward_time] = SS_iLQR(obj,istate, state_d, it, u)
             [n_states, sz] = size(state_d);
             [n_controls, ~] = size(u);
 
@@ -253,13 +260,13 @@ classdef iLQR_GNMS
                 disp(J)
             end
             
-
+            forward_time=0;
             %start the optimizing iterations
             for iteration = 1:iterations - 1
                 [L, l, ~, ~] = backward_ilqr_ss(obj,n_states, state_array, state_d, u);
-
+                timerVal = tic;
                 [new_state_array, new_u] = obj.forward_shoot(new_state_array, new_u, state_array, lmb*L, alpha*l);
-
+                forward_time=forward_time+toc(timerVal);
                 %plot before exit to understand what is happening
                 if mod(iteration, obj.plot_steps) == 0 && coder.target('MATLAB')
                     plot_xu(new_state_array, new_u, time_array,obj.names, state_d,[],obj.order, "ss ilqr",obj.plot_duration,obj.plot_figure)
@@ -300,16 +307,15 @@ classdef iLQR_GNMS
                     else
                         alpha = alpha / 2;
                         lmb = 1;
+                        if bad_iterations > 20
+                           return
+                        end
                         continue
                     end
 
                 end
 
-                if bad_iterations > 20
-                    relative = 0;
-
-                else
-                end
+               
 
                 if (((relative < j_rm)))
                     if obj.plot_end && coder.target('MATLAB')

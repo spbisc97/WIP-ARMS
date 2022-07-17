@@ -40,7 +40,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     il.order=[1,3,nan,nan;2,4,nan,nan];
     if coder.target("MATLAB")
     il.names=["x", "dx", "phi", "dphi"];   
-    il.plot_steps=inf;  
+    il.plot_steps=1;  
     il.plot_start=false;
     il.plot_end=false;
     else  
@@ -70,31 +70,31 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     end
     il_ms.pieces=8;
     i = 0;
-    tic
+    timerVal = tic;
     while i<time_iterations
         i=i+1;
         u = 0;
-        u_ms = il_ms.MS_iLQR(y,traj_d(:,1:end),t,u);
+        [~,iteration,forward_time,linear_time] = il_ms.MS_iLQR(y,traj_d(:,1:end),t,u);
     end
-    ms_time=toc/time_iterations;
+    ms_time=toc(timerVal)/time_iterations;
 
     i=0;
-    tic
+    timerVal = tic;
     while i<time_iterations
         i=i+1;
         u = 0;
-        u_ss = il_ss.SS_iLQR(y,traj_d(:,1:end),t,u);
+        [~,iteration,forward_time] = il_ss.SS_iLQR(y,traj_d(:,1:end),t,u);
     end
-    ss_time=toc/time_iterations;
+    ss_time=toc(timerVal)/time_iterations;
     
     i=0;
-    tic
+    timerVal = tic;
     while i<time_iterations
         i=i+1;
         u = 0;
-        u_ms_1 = il_ms_1.MS_iLQR(y,traj_d(:,1:end),t,u);
+        [~,iteration,forward_time,linear_time] = il_ms_1.MS_iLQR(y,traj_d(:,1:end),t,u);
     end
-    ms_1_time=toc/time_iterations;
+    ms_1_time=toc(timerVal)/time_iterations;
     disp("times")
     
     disp("MS")
