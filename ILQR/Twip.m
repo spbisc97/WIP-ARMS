@@ -170,7 +170,6 @@ classdef Twip < Model
                 Ts = 0.01;
                 n = 6;
                 Ad = (eye(n) + A * Ts / 2.) * pinv(eye(n) - A * Ts / 2.); %tustin, bilinear trans
-                B = pinv(eye(n) - A * Ts / 2.) * B * sqrt(Ts);
                 Bd = pinv(A) * (Ad - eye(n)) * B;
                 A = Ad;
                 B = Bd;

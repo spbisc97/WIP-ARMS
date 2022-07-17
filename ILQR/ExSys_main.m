@@ -35,7 +35,7 @@ function ExSys_main(Q, R, wclose)
     il=iLQR_GNMS(ExSys(),Q,R,Qn);
     il.order=[1];
     il.names=["x"];   
-    il.plot_steps=100000;  
+    il.plot_steps=1;  
     il.plot_start=true;
     il.plot_end=true;
     il.pieces=5;

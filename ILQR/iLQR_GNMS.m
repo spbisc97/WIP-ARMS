@@ -135,12 +135,12 @@ classdef iLQR_GNMS
             %start the optimizing iterations
             for iteration = 1:iterations - 1
                 [L, l, A_, B_] = backward(obj,n_states,  defects, state_array, state_d, u);
-                
-                [new_state_array, new_u] = forward_linear_shoot(obj, state_array,state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
+                new_u=u;
+                [new_state_array, new_l_u] = forward_linear_shoot(obj, state_array,state_array, u,lmb * L, alpha * l, defects, A_, B_, new_J);
 
                 if mod(iteration, obj.plot_steps) == 0
 
-                    obj.plot_xu( new_state_array, new_u, time_array, obj.names, state_d,defects, obj.order, "linear",obj.plot_duration,obj.plot_figure)
+                    obj.plot_xu( new_state_array, new_l_u, time_array, obj.names, state_d,defects, obj.order, "linear",obj.plot_duration,obj.plot_figure)
                 end
 
 
@@ -447,12 +447,12 @@ classdef iLQR_GNMS
             [n_states, ~] = size(x); %#ok
             x(:, 1)=x_old(:, 1);
             for n = 1:obj.horizon_disc - 1
-                contr=0;
+                contr=1;
                 traj=1;
                 u(:, n) = u(:, n) + contr*(l(:, n) + L(:, :,n) * (x(:, n) - x_old(:, n)));
                 A = A_(:, :,n);
                 B = B_(:, :,n);
-                x(:, n + 1) = x_old(:, n + 1) + defects(:,n) ... % starting point
+                x(:, n + 1) = x_old(:, n + 1) + (defects(:, n)) ... % starting point
                     +traj * ((A + B * L(:, :,n)) * (x(:, n) - x_old(:, n))+B * l(:, n));%adjustment
 
 
