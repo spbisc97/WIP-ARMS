@@ -1,6 +1,6 @@
-function ExSys_main(Q, R, wclose)
+function ExSys_main(Q, R,Qn, wclose)
     %if arg are less then 3 set wclose(close windows) to false
-    if nargin < 3
+    if nargin < 4
         wclose = 0;
     end
     if nargin < 2
@@ -8,6 +8,8 @@ function ExSys_main(Q, R, wclose)
     end
     if nargin <1
         Q=0;
+    end
+    if nargin <3
         Qn=10;
     end
 
