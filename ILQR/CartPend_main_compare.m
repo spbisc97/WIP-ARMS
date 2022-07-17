@@ -8,7 +8,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     end
     
     if nargin <1 || isempty(Q)
-        Q=diag([10,1,10,1])*0.01;
+        Q=diag([10,1,10,1])*0.1;
         
     end
     if nargin <3|| isempty(Q)
@@ -40,9 +40,9 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     il.order=[1,3,nan,nan;2,4,nan,nan];
     if coder.target("MATLAB")
     il.names=["x", "dx", "phi", "dphi"];   
-    il.plot_steps=1;  
-    il.plot_start=true;
-    il.plot_end=true;
+    il.plot_steps=inf;  
+    il.plot_start=false;
+    il.plot_end=false;
     else  
     il.names=[];   
     il.plot_steps=inf;  
@@ -64,9 +64,11 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     il_ss.plot_figure=figure("name","SS",'units','normalized','OuterPosition',[0 0  .33 1]);
     il_ms.plot_figure=figure("name","MS",'units','normalized','OuterPosition',[0.33 0  .33 1]);
     il_ms_1.plot_figure=figure("name","MS_1",'units','normalized','OuterPosition',[0.66 0  .33 1]);
+    time_iterations=1;
+    else
+    time_iterations=100;
     end
     il_ms.pieces=8;
-    time_iterations=1;
     i = 0;
     tic
     while i<time_iterations
@@ -74,7 +76,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
         u = 0;
         u_ms = il_ms.MS_iLQR(y,traj_d(:,1:end),t,u);
     end
-    ms_time=toc;
+    ms_time=toc/time_iterations;
 
     i=0;
     tic
@@ -83,7 +85,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
         u = 0;
         u_ss = il_ss.SS_iLQR(y,traj_d(:,1:end),t,u);
     end
-    ss_time=toc;
+    ss_time=toc/time_iterations;
     
     i=0;
     tic
@@ -92,11 +94,14 @@ function CartPend_main_compare(Q, R, Qn, wclose)
         u = 0;
         u_ms_1 = il_ms_1.MS_iLQR(y,traj_d(:,1:end),t,u);
     end
-    ms_1_time=toc;
+    ms_1_time=toc/time_iterations;
     disp("times")
-
+    
+    disp("MS")
     disp(ms_time)
+    disp("SS")
     disp(ss_time)
+    disp("MS_1")
     disp(ms_1_time)
 
 
