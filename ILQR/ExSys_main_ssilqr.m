@@ -50,7 +50,7 @@ function ExSys_main_ssilqr(Q, R, wclose)
         %find u control
         t_disc=floor(t / dt);
         y_des = traj_d(:, t_disc);
-        u =-4;
+        u =-((t:dt:t+3)-1.8).^4-0.3;
         u = il.SS_iLQR(y,traj_d(:,t_disc:end),t,u);
         %u = LQR_function(y, y_des, Q, R);
         u_next=u(:,1);

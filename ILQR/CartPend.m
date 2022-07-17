@@ -80,7 +80,6 @@ classdef CartPend < Model
             if discrete == 1
                 n = 4;
                 Ad = (eye(n) + A * Ts / 2.) * pinv(eye(n) - A * Ts / 2.); %tustin, bilinear trans
-                B = pinv(eye(n) - A * Ts / 2.) * B * sqrt(Ts);
                 Bd = pinv(A) * (Ad - eye(n)) * B;
                 A = Ad;
                 B = Bd;
