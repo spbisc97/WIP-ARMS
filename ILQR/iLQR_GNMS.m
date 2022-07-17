@@ -123,14 +123,14 @@ classdef iLQR_GNMS
             L = zeros(n_controls,n_states, obj.horizon_disc ); %size depends both from the number of controls and states
             l = zeros(n_controls, obj.horizon_disc); % size depends from the number of controls
             [state_array, defects, u] = forward_multi_shoot(obj, state_array, u, state_array, L, l);
-
+            J = obj.cost(state_array, state_d, new_u) ;
+            new_J = J;
             if obj.plot_start && coder.target('MATLAB')
                 plot_xu(state_array, u, time_array, obj.names,state_d,defects,obj.order,"multi start",obj.plot_duration,obj.plot_figure)
+                disp("J")
+                disp(J)
             end
-            J = obj.cost(state_array, state_d, new_u) * 1e3;
-            new_J = J;
-            disp("J")
-            disp(J)
+
 
             %start the optimizing iterations
             for iteration = 1:iterations - 1
@@ -243,14 +243,16 @@ classdef iLQR_GNMS
             L = zeros(n_controls,n_states, obj.horizon_disc ); %size depends both from the number of controls and states
             l = zeros(n_controls, obj.horizon_disc); % size depends from the number of controls
             [state_array, u] = forward_shoot(obj, state_array, u, state_array, L, l);
-            if obj.plot_start && coder.target('MATLAB')
-                plot_xu(state_array, u, time_array, obj.names,state_d,[],obj.order,"start",obj.plot_duration,obj.plot_figure)
-            end
+            
             J = obj.cost(state_array, state_d, new_u);
             new_J = J;
             new_state_array=state_array;
-            disp("J")
-            disp(J)
+            if obj.plot_start && coder.target('MATLAB')
+                plot_xu(state_array, u, time_array, obj.names,state_d,[],obj.order,"start",obj.plot_duration,obj.plot_figure)
+                disp("J")
+                disp(J)
+            end
+            
 
             %start the optimizing iterations
             for iteration = 1:iterations - 1
