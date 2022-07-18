@@ -36,6 +36,8 @@ classdef iLQR_GNMS
         plot_duration=0;
         %optional: figure where the plots will be drown
         plot_figure
+        %relative btw costs, exit case
+        J_rel=0.0001;
     end
     methods
         %% Dynamics
@@ -93,7 +95,6 @@ classdef iLQR_GNMS
 
             iterations = 100000;
             bad_iterations = 0;
-            j_rm = 0.0001;
 
             %* find real horizon
             if obj.horizon_disc > (sz)
@@ -129,6 +130,11 @@ classdef iLQR_GNMS
                 plot_xu(state_array, u, time_array, obj.names,state_d,defects,obj.order,"multi start",obj.plot_duration,obj.plot_figure)
                 disp("J")
                 disp(J)
+            end
+             if coder.target("MATLAB")
+                T = table(0,J, max(sum(abs(defects), 2)), 'VariableNames', {'Initial Shoot(MS)','prev_cost', 'max(sum(def))'});
+                
+                disp(T)
             end
 
             forward_time=0;
@@ -193,8 +199,8 @@ classdef iLQR_GNMS
                         lmb = 1;
                         if bad_iterations > 20
                             return
-                         end
-                         continue
+                        end
+                        continue
                     end
 
                 end
@@ -206,7 +212,7 @@ classdef iLQR_GNMS
                 else
                 end
 
-                if (((relative < j_rm)) && all((sum(abs(new_defects), 2)) < obj.defects_max))
+                if (((relative < obj.J_rel)) && all((sum(abs(new_defects), 2)) < obj.defects_max))
                     if obj.plot_end && coder.target('MATLAB')
                         plot_xu(new_state_array, new_u, time_array, obj.names, state_d, defects,obj.order, "final",obj.plot_duration,obj.plot_figure)
                     end
@@ -223,7 +229,6 @@ classdef iLQR_GNMS
 
             iterations = 100000;
             bad_iterations = 0;
-            j_rm = 0.0001;
 
             %* find real horizon
             if obj.horizon_disc > (sz)
@@ -259,6 +264,11 @@ classdef iLQR_GNMS
                 disp("J")
                 disp(J)
             end
+             if coder.target("MATLAB")
+                T = table(0,J, 'VariableNames', {'Initial Shoot(MS)','prev_cost'});
+                
+                disp(T)
+             end
             
             forward_time=0;
             %start the optimizing iterations
@@ -308,7 +318,7 @@ classdef iLQR_GNMS
                         alpha = alpha / 2;
                         lmb = 1;
                         if bad_iterations > 20
-                           return
+                            return
                         end
                         continue
                     end
@@ -317,7 +327,7 @@ classdef iLQR_GNMS
 
                
 
-                if (((relative < j_rm)))
+                if (((relative < obj.J_rel)))
                     if obj.plot_end && coder.target('MATLAB')
                         plot_xu(new_state_array, new_u, time_array, obj.names, state_d, [],obj.order, "final",obj.plot_duration,obj.plot_figure)
                     end
