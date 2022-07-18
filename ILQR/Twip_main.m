@@ -44,7 +44,7 @@ function Twip_main(Q, R,Qn, wclose)
     il.names=["phi","dphi","x" "dx", "theta","dtheta"];
     il.horizon=5;
     il.pieces=1;
-    il.plot_steps=100000;
+    il.plot_steps=inf;
     il.plot_start=false;
     il.plot_end=true;
     il.plot_duration=0;
@@ -64,9 +64,9 @@ function Twip_main(Q, R,Qn, wclose)
 
 
     if coder.target("MATLAB")
-    il_ss.plot_figure=figure("name","SS",'units','normalized','OuterPosition',[0 0  .3 .6]);
-    il_ms.plot_figure=figure("name","MS",'units','normalized','OuterPosition',[0.3 0  .3 .6]);
-    il_ms_1.plot_figure=figure("name","MS_1",'units','normalized','OuterPosition',[0.6 0  .3 .6]);
+    il_ss.plot_figure=figure("name","SS",'units','normalized','OuterPosition',[0 0  .3 .8]);
+    il_ms.plot_figure=figure("name","MS",'units','normalized','OuterPosition',[0.3 0  .3 .8]);
+    il_ms_1.plot_figure=figure("name","MS_1",'units','normalized','OuterPosition',[0.6 0  .3 .8]);
     time_iterations=1;
     else
     time_iterations=100;
