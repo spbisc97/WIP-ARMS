@@ -7,11 +7,11 @@ function Twip_main(Q, R,Qn, wclose)
         R=diag([0.01,0.01]);
     end
     if nargin <1
-        Q=diag([10,1,10,1,10,1]);
+        Q=diag([1000,10,0,10,10,1]);
        
     end
     if nargin <3
-        Qn=diag([10,1,10,1,10,1])*1000;
+        Qn=diag([1000,10,0,10,10,1])*10;
        
     end
 
@@ -30,7 +30,7 @@ function Twip_main(Q, R,Qn, wclose)
 
     time = t:dt:tf+dt; %time array
     %traj_d=-0.06*(time-1.7).^5+0.6; %desired trajectory
-    traj_d = repmat([0; 0; 1; 0;0;0], [1, (tf / dt)+1]);
+    traj_d = repmat([0; 0; 0; 1;0;0], [1, (tf / dt)+1]);
     traj_d(5,:)=-2*sin(time); %desired trajectory
     traj_d(6,:)=-2*cos(time); %desired trajectory
 
@@ -42,7 +42,7 @@ function Twip_main(Q, R,Qn, wclose)
     if coder.target("MATLAB")
     il.order=[1,2,nan,nan,nan,nan;3,4,nan,nan,nan,nan;5,6,nan,nan,nan,nan];
     il.names=["phi","dphi","x" "dx", "theta","dtheta"];
-    il.horizon=1;
+    il.horizon=5;
     il.pieces=1;
     il.plot_steps=100000;
     il.plot_start=false;
