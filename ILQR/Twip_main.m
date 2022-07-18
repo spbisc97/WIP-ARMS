@@ -42,7 +42,7 @@ function Twip_main(Q, R,Qn, wclose)
     if coder.target("MATLAB")
     il.order=[1,2,nan,nan,nan,nan;3,4,nan,nan,nan,nan;5,6,nan,nan,nan,nan];
     il.names=["phi","dphi","x" "dx", "theta","dtheta"];
-    
+    il.horizon=1;
     il.pieces=1;
     il.plot_steps=100000;
     il.plot_start=false;
@@ -73,7 +73,7 @@ function Twip_main(Q, R,Qn, wclose)
     end
 
 
-    il_ms.pieces=5;
+    il_ms.pieces=8;
     i = 0;
     ms_time_arr=zeros(time_iterations,3);
     timerVal = tic;
