@@ -51,8 +51,6 @@ function ExSys_main_ssilqr(Q, R, wclose)
         t_disc=floor(t / dt);
         y_des = traj_d(:, t_disc);
         u =-4;
-        plot(u)
-        pause
         u = il.SS_iLQR(y,traj_d(:,t_disc:end),t,u);
         %u = LQR_function(y, y_des, Q, R);
         u_next=u(:,1);
