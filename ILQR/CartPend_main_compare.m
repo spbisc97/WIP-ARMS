@@ -23,7 +23,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     % global u;
     u = 0;
     u_default=u;
-    y = [0; 0; 0; 0]; %initial point
+    y = [0; 0; 0.1; 0]; %initial point
     t = 0.01; %initial time
     tf = 15; %final time
     dt = 0.01; %increasing time %time step
@@ -41,17 +41,17 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     il.order=[1,3,nan,nan;2,4,nan,nan];
     if coder.target("MATLAB")
     il.names=["x", "dx", "phi", "dphi"];   
-    il.plot_steps=inf;  
+    il.plot_steps=3;  
     il.plot_start=true;
-    il.plot_end=false;
+    il.plot_end=true;
     else  
     il.names=[];   
     il.plot_steps=inf;  
     il.plot_start=false;
     il.plot_end=false;
     end
-    il.plot_duration=0;
-    il.defects_max=1e-5;
+    il.plot_duration=0.1;
+    il.defects_max=1e-2;
     il.horizon=3;
 
     il_ss=il;
@@ -62,13 +62,20 @@ function CartPend_main_compare(Q, R, Qn, wclose)
 
     %define plot location
     if coder.target("MATLAB")
-    il_ss.plot_figure=figure("name","SS",'units','normalized','OuterPosition',[0 0  .3 .6]);
+    il_ss.plot_figure=figure("name","Proj",'units','normalized','OuterPosition',[0 0  .3 .6]);
     il_ms.plot_figure=figure("name","MS",'units','normalized','OuterPosition',[0.3 0  .3 .6]);
     il_ms_1.plot_figure=figure("name","MS_1",'units','normalized','OuterPosition',[0.6 0  .3 .6]);
+    %%just now
+    il_ms.plot_figure=il_ss.plot_figure;
+    il_ms_1.plot_figure=il_ss.plot_figure;
+
     time_iterations=1;
     else
     time_iterations=100;
     end
+
+    pause(10)
+
     il_ms.pieces=8;
     i = 0;
     ms_time_arr=zeros(time_iterations,3);
@@ -83,7 +90,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     ms_time_final=sum(ms_time_arr,1)/time_iterations;
 
 
-
+    pause(10)
     
     ss_time_arr=zeros(time_iterations,2);
     i=0;
@@ -96,6 +103,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     end
     ss_time=toc(timerVal)/time_iterations;
     ss_time_final=sum(ss_time_arr,1)/time_iterations;
+    pause(10)
 
     ms_1_time_arr=zeros(time_iterations,3);
     i=0;
