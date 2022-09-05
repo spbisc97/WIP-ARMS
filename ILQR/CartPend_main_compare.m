@@ -41,7 +41,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     il.order=[1,3,nan,nan;2,4,nan,nan];
     if coder.target("MATLAB")
     il.names=["x", "dx", "phi", "dphi"];   
-    il.plot_steps=3;  
+    il.plot_steps=1;  
     il.plot_start=true;
     il.plot_end=true;
     else  
@@ -50,7 +50,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     il.plot_start=false;
     il.plot_end=false;
     end
-    il.plot_duration=0.1;
+    il.plot_duration=0;
     il.defects_max=1e-2;
     il.horizon=3;
 
@@ -65,9 +65,6 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     il_ss.plot_figure=figure("name","Proj",'units','normalized','OuterPosition',[0 0  .3 .6]);
     il_ms.plot_figure=figure("name","MS",'units','normalized','OuterPosition',[0.3 0  .3 .6]);
     il_ms_1.plot_figure=figure("name","MS_1",'units','normalized','OuterPosition',[0.6 0  .3 .6]);
-    %%just now
-    il_ms.plot_figure=il_ss.plot_figure;
-    il_ms_1.plot_figure=il_ss.plot_figure;
 
     time_iterations=1;
     else
