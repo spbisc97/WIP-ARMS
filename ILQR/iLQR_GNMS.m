@@ -148,7 +148,7 @@ classdef iLQR_GNMS
                 linear_time=linear_time+toc(timerVal);
                 if mod(iteration, obj.plot_steps) == 0 && coder.target('MATLAB')
 
-                    plot_xu( new_state_array, new_l_u, time_array, obj.names, state_d,defects, obj.order, "linear",obj.plot_duration,obj.plot_figure)
+                    plot_xu( new_state_array, new_l_u, time_array, obj.names, state_d,defects, obj.order, iteration+"th linear",obj.plot_duration,obj.plot_figure)
                 end
 
                 timerVal = tic;
@@ -157,7 +157,7 @@ classdef iLQR_GNMS
                 forward_time=forward_time+toc(timerVal);
                 %plot before exit to understand what is happening
                 if mod(iteration, obj.plot_steps) == 0 && coder.target('MATLAB')
-                    plot_xu(new_state_array, new_u, time_array,obj.names, state_d,new_defects,obj.order, "multi",obj.plot_duration,obj.plot_figure)
+                    plot_xu(new_state_array, new_u, time_array,obj.names, state_d,new_defects,obj.order, iteration+"th multi",obj.plot_duration,obj.plot_figure)
 
                 end
 
@@ -214,7 +214,7 @@ classdef iLQR_GNMS
 
                 if (((relative < obj.J_rel)) && all((sum(abs(new_defects), 2)) < obj.defects_max))
                     if obj.plot_end && coder.target('MATLAB')
-                        plot_xu(new_state_array, new_u, time_array, obj.names, state_d, defects,obj.order, "final",obj.plot_duration,obj.plot_figure)
+                        plot_xu(new_state_array, new_u, time_array, obj.names, state_d, defects,obj.order, iteration+"th final",obj.plot_duration,obj.plot_figure)
                     end
                     return
                 end
@@ -279,7 +279,7 @@ classdef iLQR_GNMS
                 forward_time=forward_time+toc(timerVal);
                 %plot before exit to understand what is happening
                 if mod(iteration, obj.plot_steps) == 0 && coder.target('MATLAB')
-                    plot_xu(new_state_array, new_u, time_array,obj.names, state_d,[],obj.order, "ss ilqr",obj.plot_duration,obj.plot_figure)
+                    plot_xu(new_state_array, new_u, time_array,obj.names, state_d,[],obj.order, iteration+"th ss",obj.plot_duration,obj.plot_figure)
 
                 end
 
@@ -329,7 +329,7 @@ classdef iLQR_GNMS
 
                 if (((relative < obj.J_rel)))
                     if obj.plot_end && coder.target('MATLAB')
-                        plot_xu(new_state_array, new_u, time_array, obj.names, state_d, [],obj.order, "final",obj.plot_duration,obj.plot_figure)
+                        plot_xu(new_state_array, new_u, time_array, obj.names, state_d, [],obj.order, iteration+"th final",obj.plot_duration,obj.plot_figure)
                     end
                     return
                 end

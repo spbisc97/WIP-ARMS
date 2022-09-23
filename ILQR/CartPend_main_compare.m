@@ -41,9 +41,9 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     il.order=[1,3,nan,nan;2,4,nan,nan];
     if coder.target("MATLAB")
     il.names=["x", "dx", "phi", "dphi"];   
-    il.plot_steps=inf;  
+    il.plot_steps=1;  
     il.plot_start=true;
-    il.plot_end=false;
+    il.plot_end=true;
     else  
     il.names=[];   
     il.plot_steps=inf;  
@@ -51,7 +51,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     il.plot_end=false;
     end
     il.plot_duration=0;
-    il.defects_max=1e-5;
+    il.defects_max=1e-3;
     il.horizon=3;
 
     il_ss=il;
