@@ -44,8 +44,8 @@ function Twip_main(Q, R,Qn, wclose)
     il.names=["phi","dphi","x" "dx", "theta","dtheta"];
     il.horizon=5;
     il.pieces=1;
-    il.plot_steps=inf;
-    il.plot_start=false;
+    il.plot_steps=2;
+    il.plot_start=true;
     il.plot_end=true;
     il.plot_duration=0;
     else

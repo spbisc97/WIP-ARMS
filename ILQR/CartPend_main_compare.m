@@ -4,7 +4,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
         wclose = 1;
     end
     if nargin < 2 || isempty(R)
-        R=0.001;
+        R=1;
     end
     
     if nargin <1 || isempty(Q)
@@ -23,7 +23,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     % global u;
     u = 0;
     u_default=u;
-    y = [0; 0; 0.1; 0]; %initial point
+    y = [0; 0; 0; 0]; %initial point
     t = 0.01; %initial time
     tf = 15; %final time
     dt = 0.01; %increasing time %time step
@@ -41,7 +41,7 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     il.order=[1,3,nan,nan;2,4,nan,nan];
     if coder.target("MATLAB")
     il.names=["x", "dx", "phi", "dphi"];   
-    il.plot_steps=1;  
+    il.plot_steps=10;  
     il.plot_start=true;
     il.plot_end=true;
     else  
@@ -71,7 +71,6 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     time_iterations=100;
     end
 
-    pause(10)
 
     il_ms.pieces=8;
     i = 0;
@@ -87,7 +86,6 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     ms_time_final=sum(ms_time_arr,1)/time_iterations;
 
 
-    pause(10)
     
     ss_time_arr=zeros(time_iterations,2);
     i=0;
@@ -100,7 +98,6 @@ function CartPend_main_compare(Q, R, Qn, wclose)
     end
     ss_time=toc(timerVal)/time_iterations;
     ss_time_final=sum(ss_time_arr,1)/time_iterations;
-    pause(10)
 
     ms_1_time_arr=zeros(time_iterations,3);
     i=0;

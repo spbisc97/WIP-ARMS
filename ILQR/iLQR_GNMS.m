@@ -188,14 +188,14 @@ classdef iLQR_GNMS
                 else
 
                     if ~isnan(new_J) && ~isinf(new_J)
-                        alpha = alpha / 2;
+                        alpha = alpha / 1.4;
                         lmb = 1;
                         state_array = new_state_array;
                         J = new_J;
                         u = new_u;
                         defects = new_defects;
                     else
-                        alpha = alpha / 2;
+                        alpha = alpha / 1.4;
                         lmb = 1;
                         if bad_iterations > 20
                             return
@@ -309,13 +309,13 @@ classdef iLQR_GNMS
                 else
 
                     if ~isnan(new_J) && ~isinf(new_J)
-                        alpha = alpha / 2;
+                        alpha = alpha / 1.4;
                         lmb = 1;
                         state_array = new_state_array;
                         J = new_J;
                         u = new_u;
                     else
-                        alpha = alpha / 2;
+                        alpha = alpha / 1.4;
                         lmb = 1;
                         if bad_iterations > 20
                             return
